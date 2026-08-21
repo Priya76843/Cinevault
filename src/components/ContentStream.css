@@ -1,0 +1,7 @@
+.content-stream {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  background-color: #0a0a0a;
+  box-sizing: border-box;
+}

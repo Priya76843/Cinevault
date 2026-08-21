@@ -1,0 +1,264 @@
+/* =========================
+   HERO
+========================= */
+
+.hero {
+  position: relative;
+  width: 100%;
+  max-width: 1440px;
+  height: 680px;
+  margin: 0 auto;
+  overflow: hidden;
+  background: #0a0a0a;
+}
+
+/* Background Image */
+
+.hero-background {
+  position: absolute;
+  inset: 0;
+
+  background-image: url("https://image.tmdb.org/t/p/original/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Dark Gradient */
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    90deg,
+    rgba(10, 10, 10, 0.95) 0%,
+    rgba(10, 10, 10, 0.75) 35%,
+    rgba(10, 10, 10, 0.35) 70%,
+    rgba(10, 10, 10, 0.45) 100%
+  );
+}
+
+/* =========================
+   HERO CONTENT
+========================= */
+
+.hero-meta {
+  position: absolute;
+  left: 80px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 640px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  z-index: 2;
+}
+
+/* =========================
+   EYEBROW
+========================= */
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  height: 21px;
+}
+
+.badge {
+  width: 124px;
+  height: 21px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ffb800;
+  border-radius: 4px;
+
+  color: #000;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+}
+
+.meta-info {
+  font-size: 13px;
+  line-height: 16px;
+  color: #d1d1d1;
+}
+
+/* =========================
+   TITLE
+========================= */
+
+.hero-title {
+  margin: 0;
+
+  width: 640px;
+
+  color: #fff;
+  font-size: 64px;
+  line-height: 64px;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+
+/* =========================
+   STATS
+========================= */
+
+.stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  height: 16px;
+
+  font-size: 13px;
+  color: #b3b3b3;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  color: #fff;
+}
+
+.star-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.divider {
+  color: #444;
+}
+
+.director {
+  color: #b3b3b3;
+}
+
+/* =========================
+   DESCRIPTION
+========================= */
+
+.description {
+  width: 640px;
+  height: 72px;
+
+  margin: 0;
+
+  color: #d1d1d1;
+  font-size: 15px;
+  line-height: 24px;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+.ctas {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  height: 50px;
+}
+
+.btn {
+  height: 50px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  border-radius: 8px;
+
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+/* Watch Trailer */
+
+.watch-btn {
+  width: 186px;
+
+  background: #ffb800;
+  border: none;
+
+  color: #000;
+}
+
+.watch-btn:hover {
+  background: #ffc733;
+}
+
+/* More Info */
+
+.info-btn {
+  width: 133px;
+
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  color: #fff;
+
+  backdrop-filter: blur(8px);
+}
+
+.info-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Play Icon */
+
+.play-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+  .hero {
+    height: 550px;
+  }
+
+  .hero-meta {
+    left: 24px;
+    width: calc(100% - 48px);
+  }
+
+  .hero-title {
+    width: 100%;
+    font-size: 44px;
+    line-height: 48px;
+  }
+
+  .description {
+    width: 100%;
+    height: auto;
+  }
+
+  .eyebrow {
+    flex-wrap: wrap;
+    height: auto;
+  }
+
+  .meta-info {
+    font-size: 12px;
+  }
+}

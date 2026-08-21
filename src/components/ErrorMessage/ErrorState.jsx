@@ -1,6 +1,6 @@
 import React from "react";
 
-const EmptyState = () => {
+const ErrorState = ({ onRetry }) => {
   return (
     <div className="min-h-screen bg-[#08080A] text-white flex flex-col">
 
@@ -44,37 +44,30 @@ const EmptyState = () => {
       </nav>
 
 
-      {/* ================= EMPTY CONTENT ================= */}
+      {/* ================= ERROR CONTENT ================= */}
       <main className="flex-1 flex items-center justify-center px-6">
 
-        {/* Empty State Card */}
+        {/* Error Card */}
         <div className="w-full max-w-[280px] bg-[#111115] border border-[#1D1D23] rounded-md px-6 py-7 text-center shadow-2xl">
 
-          {/* Empty Icon */}
+          {/* Error Icon */}
           <div className="flex justify-center mb-5">
 
-            <div className="w-8 h-8 rounded-full border border-[#F5B82E]/60 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full border border-red-500/60 flex items-center justify-center">
 
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="w-4 h-4 text-[#F5B82E]"
+                className="w-4 h-4 text-red-500"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="1.8"
+                strokeWidth="2"
               >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  d="M20 20l-4.35-4.35"
+                  d="M12 9v4m0 4h.01M10.29 3.86l-7.82 13a2 2 0 001.71 3h15.64a2 2 0 001.71-3l-7.82-13a2 2 0 00-3.42 0z"
                 />
-
-                <circle
-                  cx="11"
-                  cy="11"
-                  r="6.5"
-                />
-
               </svg>
 
             </div>
@@ -84,22 +77,23 @@ const EmptyState = () => {
 
           {/* Heading */}
           <h2 className="text-xs font-semibold text-white mb-2">
-            No Movies Found
+            Oops! Something went wrong
           </h2>
 
 
           {/* Description */}
           <p className="text-[8px] leading-4 text-gray-500 mb-5">
-            We couldn't find any movies matching your search.
-            Try searching for another movie or genre.
+            We couldn't load the movies right now.
+            Please check your connection and try again.
           </p>
 
 
-          {/* Action Button */}
+          {/* Retry Button */}
           <button
+            onClick={onRetry}
             className="w-full h-7 bg-[#F5B82E] hover:bg-[#E5A91F] text-black text-[8px] font-semibold rounded transition-colors duration-200"
           >
-            Explore Movies
+            Retry Connection
           </button>
 
         </div>
@@ -185,4 +179,4 @@ const EmptyState = () => {
   );
 };
 
-export default EmptyState;
+export default ErrorState;

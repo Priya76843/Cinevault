@@ -1,0 +1,132 @@
+.coming-soon-section {
+  padding: 0 80px 40px;
+  box-sizing: border-box;
+}
+
+.coming-soon-header {
+  margin-bottom: 16px;
+}
+
+.coming-soon-title {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.coming-soon-row {
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 20px;
+}
+
+.coming-soon-card {
+  display: flex;
+
+  gap: 14px;
+
+  padding: 14px;
+
+  background-color: #141414;
+
+  border: 1px solid #1f1f1f;
+
+  border-radius: 10px;
+
+  cursor: pointer;
+
+  transition: all 0.3s ease;
+}
+
+.coming-soon-card:hover {
+  background-color: #1a1a1a;
+
+  border-color: #ffb800;
+}
+
+.cs-poster {
+  width: 80px;
+  height: 110px;
+
+  flex-shrink: 0;
+
+  object-fit: cover;
+
+  border-radius: 6px;
+}
+
+.cs-info {
+  display: flex;
+  flex-direction: column;
+
+  gap: 6px;
+
+  overflow: hidden;
+}
+
+.cs-release {
+  align-self: flex-start;
+
+  padding: 3px 8px;
+
+  color: #ffb800;
+
+  background-color: rgba(255, 184, 0, 0.1);
+
+  border-radius: 4px;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  letter-spacing: 0.5px;
+}
+
+.cs-title {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.cs-description {
+  margin: 0;
+
+  color: #b3b3b3;
+
+  font-size: 12px;
+  line-height: 1.5;
+
+  overflow: hidden;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+@media (max-width: 1200px) {
+  .coming-soon-section {
+    padding: 0 40px 40px;
+  }
+}
+
+@media (max-width: 900px) {
+  .coming-soon-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .coming-soon-section {
+    padding: 0 20px 30px;
+  }
+
+  .coming-soon-title {
+    font-size: 18px;
+  }
+}

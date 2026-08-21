@@ -1,0 +1,78 @@
+.genre-section {
+  padding: 0 80px 60px;
+
+  box-sizing: border-box;
+}
+
+.genre-header {
+  margin-bottom: 16px;
+}
+
+.genre-title {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.genre-list {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 10px;
+}
+
+.genre-chip {
+  padding: 8px 20px;
+
+  background-color: #1a1a1a;
+
+  border: 1px solid #2a2a2a;
+
+  border-radius: 20px;
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition: all 0.3s ease;
+}
+
+.genre-chip:hover {
+  background-color: #ffb800;
+
+  border-color: #ffb800;
+
+  color: #000000;
+
+  transform: translateY(-2px);
+}
+
+@media (max-width: 900px) {
+  .genre-section {
+    padding: 0 40px 50px;
+  }
+}
+
+@media (max-width: 600px) {
+  .genre-section {
+    padding: 0 20px 40px;
+  }
+
+  .genre-title {
+    font-size: 18px;
+  }
+
+  .genre-chip {
+    padding: 7px 15px;
+
+    font-size: 12px;
+  }
+}
