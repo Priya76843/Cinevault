@@ -13,15 +13,25 @@ const ContentStream = ({
   const [selectedGenre, setSelectedGenre] = useState(null);
 
   const genres = [
-    'Action', 'Adventure', 'Comedy', 'Drama',
-    'Sci-Fi', 'Horror', 'Romance', 'Thriller',
+    'Action',
+    'Adventure',
+    'Comedy',
+    'Drama',
+    'Sci-Fi',
+    'Horror',
+    'Romance',
+    'Thriller',
   ];
 
+  // Filter movies by selected genre
   const filterByGenre = (movieList) => {
     if (!selectedGenre || selectedGenre === 'All') return movieList;
+
     return movieList.filter((movie) => {
       if (movie.genres && Array.isArray(movie.genres)) {
-        return movie.genres.some((g) => g.toLowerCase() === selectedGenre.toLowerCase());
+        return movie.genres.some(
+          (g) => g.toLowerCase() === selectedGenre.toLowerCase()
+        );
       }
       if (movie.genre) {
         return movie.genre.toLowerCase().includes(selectedGenre.toLowerCase());
@@ -30,20 +40,43 @@ const ContentStream = ({
     });
   };
 
+  // Helper function to handle genre click AND auto-scroll up to movies
+  const handleGenreClick = (genre) => {
+    const isSameGenre = selectedGenre === genre;
+    const newGenre = isSameGenre ? null : genre;
+
+    setSelectedGenre(newGenre);
+
+    // Auto-scroll up to the top of the movie results section
+    if (newGenre) {
+      const targetSection = document.getElementById('trending');
+      if (targetSection) {
+        targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  };
+
+  const filteredTrending = filterByGenre(trending);
+  const filteredPopular = filterByGenre(popular);
+  const filteredTopRated = filterByGenre(topRated);
+
   return (
     <section className="bg-[#080808] px-20 py-10 max-w-[1440px] mx-auto text-white">
       
-      {/* Active Genre Notification */}
+      {/* Active Genre Filter Notification */}
       {selectedGenre && (
-        <div className="mb-6 p-3 bg-neutral-900 border border-[#FFB800]/30 rounded-lg flex items-center justify-between">
-          <span className="text-sm text-neutral-300">
-            Filtering by: <strong className="text-[#FFB800]">{selectedGenre}</strong>
-          </span>
+        <div className="mb-6 p-3.5 bg-neutral-900 border border-[#FFB800]/40 rounded-xl flex items-center justify-between shadow-lg">
+          <div className="flex items-center gap-2">
+            <span className="text-base">🎬</span>
+            <span className="text-sm text-neutral-300">
+              Showing movies matching: <strong className="text-[#FFB800] text-base ml-1">{selectedGenre}</strong>
+            </span>
+          </div>
           <button
             onClick={() => setSelectedGenre(null)}
-            className="text-xs bg-[#FFB800] text-black font-semibold px-3 py-1 rounded hover:bg-yellow-400 transition-colors cursor-pointer"
+            className="text-xs bg-[#FFB800] text-black font-bold px-3.5 py-1.5 rounded-lg hover:bg-yellow-400 transition-colors cursor-pointer"
           >
-            Show All
+            Show All Movies ✕
           </button>
         </div>
       )}
@@ -52,7 +85,7 @@ const ContentStream = ({
       <div id="trending">
         <MovieSection
           title="Trending Now"
-          movies={filterByGenre(trending)}
+          movies={filteredTrending}
           cols={5}
           onMovieClick={onMovieClick}
           onCompare={onCompare}
@@ -63,7 +96,7 @@ const ContentStream = ({
       {/* Popular Movies */}
       <MovieSection
         title="Popular Movies"
-        movies={filterByGenre(popular)}
+        movies={filteredPopular}
         cols={8}
         onMovieClick={onMovieClick}
         onCompare={onCompare}
@@ -74,7 +107,7 @@ const ContentStream = ({
       <div id="top-rated">
         <MovieSection
           title="Top Rated Masterworks"
-          movies={filterByGenre(topRated)}
+          movies={filteredTopRated}
           cols={5}
           onMovieClick={onMovieClick}
           onCompare={onCompare}
@@ -82,7 +115,7 @@ const ContentStream = ({
         />
       </div>
 
-      {/* Coming Soon */}
+      {/* Coming Soon Section */}
       <div className="mb-10">
         <h2 className="text-2xl font-bold text-white mb-4">Coming Soon</h2>
         <div className="grid grid-cols-3 gap-5">
@@ -113,7 +146,7 @@ const ContentStream = ({
         </div>
       </div>
 
-      {/* Browse by Genre */}
+      {/* Browse by Genre Chips */}
       <div id="genres" className="mb-10">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-white m-0">Browse by Genre</h2>
@@ -126,16 +159,17 @@ const ContentStream = ({
             </button>
           )}
         </div>
+        
         <div className="flex flex-wrap gap-2.5">
           {genres.map((genre) => {
             const isActive = selectedGenre === genre;
             return (
               <button
                 key={genre}
-                onClick={() => setSelectedGenre(isActive ? null : genre)}
+                onClick={() => handleGenreClick(genre)}
                 className={`px-5 py-2 rounded-full text-[13px] font-medium border transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-[#FFB800] text-black border-[#FFB800] font-bold shadow-md'
+                    ? 'bg-[#FFB800] text-black border-[#FFB800] font-bold shadow-md scale-105'
                     : 'bg-neutral-900 text-white border-neutral-800 hover:bg-[#FFB800] hover:text-black hover:border-[#FFB800]'
                 }`}
               >
