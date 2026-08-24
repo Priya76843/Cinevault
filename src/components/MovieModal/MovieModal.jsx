@@ -1,46 +1,52 @@
 import React, { useState } from 'react';
 
-const MovieModal = ({ movie, onClose }) => {
+const FAVORITES_KEY = 'cinevault_favorites';
+
+const MovieModal = ({ movie, onClose, onCompare, compareList = [] }) => {
   if (!movie) return null;
 
   const movieId = movie.id || movie.imdbID;
 
-  // Check if movie is already in watchlist on open
   const [inWatchlist, setInWatchlist] = useState(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem('cinevault_watchlist') || '[]');
+      const saved = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]');
       return saved.some((item) => (item.id || item.imdbID) === movieId);
     } catch {
       return false;
     }
   });
 
-  // Toggle watchlist in localStorage
+  const isComparing = compareList.some(
+    (m) => (m.id || m.imdbID) === movieId
+  );
+
+  const handleWatchTrailer = () => {
+    const query = encodeURIComponent(`${movie.title} trailer`);
+    window.open(`https://www.youtube.com/results?search_query=${query}`, '_blank');
+  };
+
   const handleToggleWatchlist = () => {
     try {
-      const saved = JSON.parse(localStorage.getItem('cinevault_watchlist') || '[]');
+      const saved = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]');
       let updated;
 
       if (inWatchlist) {
-        // Remove from watchlist
         updated = saved.filter((item) => (item.id || item.imdbID) !== movieId);
         setInWatchlist(false);
       } else {
-        // Add full movie object so Watchlist page can render it
         updated = [...saved, movie];
         setInWatchlist(true);
       }
 
-      localStorage.setItem('cinevault_watchlist', JSON.stringify(updated));
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(updated));
+      window.dispatchEvent(new Event('cinevault-favorites-updated'));
     } catch (err) {
-      console.error('Failed to update watchlist:', err);
+      console.error(err);
     }
   };
 
-  // Opens YouTube trailer in new tab
-  const handleWatchTrailer = () => {
-    const query = encodeURIComponent(`${movie.title} trailer`);
-    window.open(`https://www.youtube.com/results?search_query=${query}`, '_blank');
+  const handleCompare = () => {
+    if (onCompare) onCompare(movie);
   };
 
   return (
@@ -52,27 +58,24 @@ const MovieModal = ({ movie, onClose }) => {
         className="relative w-full max-w-[840px] bg-[#0c0c10] rounded-2xl overflow-hidden shadow-2xl border border-neutral-800 flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Banner Image */}
+        {/* Banner */}
         <div className="relative w-full h-[240px] flex-shrink-0">
           <img
             src={movie.banner || movie.poster}
             alt="Backdrop"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c10] via-transparent to-black/30"></div>
-
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c10] via-transparent to-black/30" />
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-black/50 hover:bg-[#FFB800] hover:text-black text-white rounded-full transition-colors z-10 cursor-pointer"
+            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-black/50 hover:bg-[#FFB800] hover:text-black text-white rounded-full z-10 cursor-pointer"
           >
             ✕
           </button>
         </div>
 
-        {/* Content Area */}
         <div className="flex flex-col md:flex-row gap-8 px-10 pb-10 pt-2 overflow-y-auto no-scrollbar">
-          
-          {/* Left Column: Poster & Buttons */}
+          {/* Left column */}
           <div className="w-full md:w-[200px] flex-shrink-0 flex flex-col gap-3">
             <img
               src={movie.poster}
@@ -80,21 +83,18 @@ const MovieModal = ({ movie, onClose }) => {
               className="w-full aspect-[2/3] object-cover rounded-lg shadow-lg -mt-16 relative z-10 border border-neutral-800"
             />
 
-            {/* Watch Trailer */}
+            {/* 1. Watch Trailer */}
             <button
               onClick={handleWatchTrailer}
-              className="w-full bg-[#FFB800] text-black font-bold text-[13px] py-2.5 rounded hover:bg-yellow-400 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+              className="w-full bg-[#FFB800] text-black font-bold text-[13px] py-2.5 rounded hover:bg-yellow-400 transition-colors cursor-pointer"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="black">
-                <path d="M8 5v14l11-7z" />
-              </svg>
               Watch Trailer
             </button>
 
-            {/* Watchlist Toggle */}
+            {/* 2. Watchlist / Favorites */}
             <button
               onClick={handleToggleWatchlist}
-              className={`w-full font-semibold text-[13px] py-2.5 rounded transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`w-full font-semibold text-[13px] py-2.5 rounded transition-all cursor-pointer ${
                 inWatchlist
                   ? 'bg-[#FFB800]/20 text-[#FFB800] border border-[#FFB800]/50 font-bold'
                   : 'bg-transparent border border-neutral-700 text-white hover:bg-neutral-800'
@@ -102,9 +102,21 @@ const MovieModal = ({ movie, onClose }) => {
             >
               {inWatchlist ? '✓ In Watchlist' : '+ Watchlist'}
             </button>
+
+            {/* 3. Compare */}
+            <button
+              onClick={handleCompare}
+              className={`w-full font-semibold text-[13px] py-2.5 rounded transition-all cursor-pointer ${
+                isComparing
+                  ? 'bg-[#FFB800] text-black font-bold'
+                  : 'bg-transparent border border-neutral-700 text-white hover:bg-neutral-800'
+              }`}
+            >
+              {isComparing ? '✓ Comparing' : '+ Compare'}
+            </button>
           </div>
 
-          {/* Right Column: Details */}
+          {/* Right column — keep your existing details */}
           <div className="flex-1 flex flex-col pt-2">
             <h2 className="text-3xl font-black text-white uppercase tracking-tight m-0">
               {movie.title}
@@ -151,12 +163,8 @@ const MovieModal = ({ movie, onClose }) => {
                       className="w-10 h-10 rounded-full object-cover bg-neutral-800"
                     />
                     <div className="flex flex-col">
-                      <span className="text-[12px] font-semibold text-white">
-                        {actor.name}
-                      </span>
-                      <span className="text-[11px] text-neutral-500">
-                        {actor.role}
-                      </span>
+                      <span className="text-[12px] font-semibold text-white">{actor.name}</span>
+                      <span className="text-[11px] text-neutral-500">{actor.role}</span>
                     </div>
                   </div>
                 ))}

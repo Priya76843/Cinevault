@@ -16,7 +16,7 @@ const Navbar = ({
     { name: 'Trending', id: 'trending', type: 'scroll' },
     { name: 'Top Rated', id: 'top-rated', type: 'scroll' },
     { name: 'Genres', id: 'genres', type: 'scroll' },
-    { name: 'Watchlist', id: 'watchlist', type: 'view' },
+
   ];
 
   const handleNavClick = (link) => {

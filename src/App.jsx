@@ -8,63 +8,59 @@ import MovieModal from './components/MovieModal/MovieModal';
 import LoadingState from './components/Loading/LoadingState';
 import ErrorState from './components/ErrorMessage/ErrorState';
 import CompareModal from './components/CompareModal/CompareModal';
-import Watchlist from './components/Watchlist/Watchlist';
 import { searchMovies, getMovieDetails, fetchCuratedRow } from './services/omdbApi';
 import { movieIDs } from './data/movieids';
 import { mockSearchResults } from './data/mockMovies';
 
 function App() {
-  const [view, setView] = useState('loading'); // 'loading' | 'home' | 'search' | 'error' | 'watchlist'
+  const [view, setView] = useState('loading'); // 'loading' | 'home' | 'search' | 'error'
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // EXTRA FEATURES STATE
+  // COMPARE & THEME STATE
   const [compareList, setCompareList] = useState([]);
   const [isLightMode, setIsLightMode] = useState(false);
 
-  // HOMEPAGE MOVIE STATES
+  // HOMEPAGE STATES
   const [heroMovie, setHeroMovie] = useState(null);
   const [trendingMovies, setTrendingMovies] = useState([]);
   const [popularMovies, setPopularMovies] = useState([]);
   const [topRatedMovies, setTopRatedMovies] = useState([]);
   const [comingSoonMovies, setComingSoonMovies] = useState([]);
 
-  // 1. Toggle Theme (Dark / Light Mode)
+  // Toggle Dark/Light Mode
   const toggleTheme = () => {
     setIsLightMode((prev) => !prev);
     document.body.classList.toggle('light-mode');
   };
 
-  // 2. Handle Movie Comparison Logic
-  const handleCompare = async (movie) => {
+  // HANDLE COMPARE
+  const handleCompare = (movie) => {
     const movieId = movie.id || movie.imdbID;
 
-    // If movie is already in compare list, remove it
+    // 1. If already in list -> remove it
     if (compareList.some((m) => (m.id || m.imdbID) === movieId)) {
       setCompareList(compareList.filter((m) => (m.id || m.imdbID) !== movieId));
       return;
     }
 
-    // If list has less than 2 movies, fetch full details and add to compare list
+    // 2. Add to compare list
     if (compareList.length < 2) {
-      let fullDetails = movie;
-      if (!movie.plot || !movie.director) {
-        fullDetails = (await getMovieDetails(movieId)) || movie;
-      }
-      setCompareList([...compareList, fullDetails]);
+      setCompareList([...compareList, movie]);
+      // Close the detail modal so the user can go select movie #2!
+      setSelectedMovie(null);
     }
   };
 
-  // 3. Load Homepage Curated Data with 3.5s Safety Timeout Fallback
+  // Load Homepage Data
   useEffect(() => {
     let isMounted = true;
 
     const loadHomeData = async () => {
       try {
-        // Safety timeout to prevent getting stuck on loading screen
         const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('API Timeout')), 3500)
         );
@@ -91,7 +87,6 @@ function App() {
           setView('home');
         }
       } catch (err) {
-        console.warn('OMDb API slow or offline, using fallback data:', err);
         if (isMounted) {
           setHeroMovie(mockSearchResults[1]);
           setTrendingMovies(mockSearchResults);
@@ -110,7 +105,7 @@ function App() {
     };
   }, []);
 
-  // 4. Handle Search Submission via OMDb API
+  // Search Handler
   const handleSearch = async (query) => {
     if (!query?.trim()) return;
 
@@ -123,17 +118,15 @@ function App() {
       setSearchResults(results.length ? results : mockSearchResults);
       setView('search');
     } catch (err) {
-      console.warn('Search failed, showing fallback results:', err);
       setSearchResults(mockSearchResults);
       setView('search');
     }
   };
 
-  // 5. Handle Movie Card Click to Open Detail Modal
+  // Open Movie Detail Modal
   const handleMovieClick = async (movie) => {
     const movieId = movie.id || movie.imdbID;
 
-    // Use existing details if available
     if (movie.plot && movie.director) {
       setSelectedMovie(movie);
       return;
@@ -145,7 +138,7 @@ function App() {
       setSelectedMovie(details || movie);
     } catch (err) {
       setSelectedMovie(movie);
-    } finally{
+    } finally {
       setModalLoading(false);
     }
   };
@@ -158,10 +151,8 @@ function App() {
     setSearchResults([]);
   };
 
-  // Render Loading View
   if (view === 'loading') return <LoadingState />;
 
-  // Render Error View
   if (view === 'error') {
     return (
       <ErrorState
@@ -174,7 +165,6 @@ function App() {
 
   return (
     <div className="bg-[#080808] min-h-screen transition-colors">
-      {/* Navbar */}
       <Navbar
         onSearch={handleSearch}
         onViewChange={setView}
@@ -183,7 +173,6 @@ function App() {
         isLightMode={isLightMode}
       />
 
-      {/* View 1: Home View */}
       {view === 'home' && (
         <>
           <Hero movie={heroMovie} onMovieClick={handleMovieClick} />
@@ -193,38 +182,23 @@ function App() {
             topRated={topRatedMovies}
             comingSoon={comingSoonMovies}
             onMovieClick={handleMovieClick}
-            onCompare={handleCompare}
-            compareList={compareList}
           />
         </>
       )}
 
-      {/* View 2: Search Results View */}
       {view === 'search' && (
         <SearchResults
           query={searchQuery}
           results={searchResults}
           onMovieClick={handleMovieClick}
-          onCompare={handleCompare}
-          compareList={compareList}
           onBack={handleBackHome}
           onSearch={handleSearch}
         />
       )}
 
-      {/* View 3: Watchlist Page View */}
-      {view === 'watchlist' && (
-        <Watchlist
-          onMovieClick={handleMovieClick}
-          onCompare={handleCompare}
-          compareList={compareList}
-        />
-      )}
-
-      {/* Footer */}
       <Footer />
 
-      {/* Modal 1: Modal Loading Overlay */}
+      {/* Loading Spinner for Modal */}
       {modalLoading && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60">
           <div className="flex items-center gap-3 bg-[#111] px-6 py-4 rounded-xl border border-neutral-800">
@@ -234,12 +208,17 @@ function App() {
         </div>
       )}
 
-      {/* Modal 2: Movie Detail Modal */}
+      {/* 1. Movie Detail Modal (passes onCompare and compareList) */}
       {selectedMovie && !modalLoading && (
-        <MovieModal movie={selectedMovie} onClose={handleCloseModal} />
+        <MovieModal
+          movie={selectedMovie}
+          onClose={handleCloseModal}
+          onCompare={handleCompare}
+          compareList={compareList}
+        />
       )}
 
-      {/* Modal 3: Movie Comparison Modal (Opens automatically when 2 movies are selected) */}
+      {/* 2. Compare Modal (Opens when 2 movies are selected) */}
       {compareList.length === 2 && (
         <CompareModal
           movies={compareList}
@@ -247,14 +226,14 @@ function App() {
         />
       )}
 
-      {/* Floating Notification Toast when 1 movie is selected for comparison */}
+      {/* 3. Floating Notification when 1 movie is selected */}
       {compareList.length === 1 && (
-        <div className="fixed bottom-6 right-6 bg-[#FFB800] text-black px-5 py-3 rounded-xl font-bold shadow-2xl z-50 animate-bounce flex items-center gap-3 border border-yellow-300">
+        <div className="fixed bottom-6 right-6 bg-[#FFB800] text-black px-5 py-3 rounded-xl font-bold shadow-2xl z-[150] animate-bounce flex items-center gap-3 border border-yellow-300">
           <span>Comparing 1 movie: <strong>{compareList[0]?.title}</strong></span>
-          <span className="text-xs font-normal opacity-80">(Select 1 more)</span>
+          <span className="text-xs font-normal opacity-80">(Open another movie & click Compare)</span>
           <button
             onClick={() => setCompareList([])}
-            className="ml-2 text-xs bg-black text-white px-2 py-1 rounded hover:bg-neutral-800 cursor-pointer"
+            className="ml-2 text-xs bg-black text-white px-2.5 py-1 rounded hover:bg-neutral-800 cursor-pointer"
           >
             Cancel ✕
           </button>
