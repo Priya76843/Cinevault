@@ -7,29 +7,21 @@ const ContentStream = ({
   topRated = [],
   comingSoon = [],
   onMovieClick,
+  onCompare,
+  compareList = [],
 }) => {
   const [selectedGenre, setSelectedGenre] = useState(null);
 
   const genres = [
-    'Action',
-    'Adventure',
-    'Comedy',
-    'Drama',
-    'Sci-Fi',
-    'Horror',
-    'Romance',
-    'Thriller',
+    'Action', 'Adventure', 'Comedy', 'Drama',
+    'Sci-Fi', 'Horror', 'Romance', 'Thriller',
   ];
 
-  // Filter movies by genre
   const filterByGenre = (movieList) => {
     if (!selectedGenre || selectedGenre === 'All') return movieList;
-
     return movieList.filter((movie) => {
       if (movie.genres && Array.isArray(movie.genres)) {
-        return movie.genres.some(
-          (g) => g.toLowerCase() === selectedGenre.toLowerCase()
-        );
+        return movie.genres.some((g) => g.toLowerCase() === selectedGenre.toLowerCase());
       }
       if (movie.genre) {
         return movie.genre.toLowerCase().includes(selectedGenre.toLowerCase());
@@ -38,14 +30,10 @@ const ContentStream = ({
     });
   };
 
-  const filteredTrending = filterByGenre(trending);
-  const filteredPopular = filterByGenre(popular);
-  const filteredTopRated = filterByGenre(topRated);
-
   return (
     <section className="bg-[#080808] px-20 py-10 max-w-[1440px] mx-auto text-white">
       
-      {/* Active Genre Filter Notification */}
+      {/* Active Genre Notification */}
       {selectedGenre && (
         <div className="mb-6 p-3 bg-neutral-900 border border-[#FFB800]/30 rounded-lg flex items-center justify-between">
           <span className="text-sm text-neutral-300">
@@ -64,37 +52,43 @@ const ContentStream = ({
       <div id="trending">
         <MovieSection
           title="Trending Now"
-          movies={filteredTrending}
+          movies={filterByGenre(trending)}
           cols={5}
           onMovieClick={onMovieClick}
+          onCompare={onCompare}
+          compareList={compareList}
         />
       </div>
 
       {/* Popular Movies */}
       <MovieSection
         title="Popular Movies"
-        movies={filteredPopular}
+        movies={filterByGenre(popular)}
         cols={8}
         onMovieClick={onMovieClick}
+        onCompare={onCompare}
+        compareList={compareList}
       />
 
       {/* Top Rated Masterworks */}
       <div id="top-rated">
         <MovieSection
           title="Top Rated Masterworks"
-          movies={filteredTopRated}
+          movies={filterByGenre(topRated)}
           cols={5}
           onMovieClick={onMovieClick}
+          onCompare={onCompare}
+          compareList={compareList}
         />
       </div>
 
-      {/* Coming Soon Section */}
+      {/* Coming Soon */}
       <div className="mb-10">
         <h2 className="text-2xl font-bold text-white mb-4">Coming Soon</h2>
         <div className="grid grid-cols-3 gap-5">
           {comingSoon.slice(0, 3).map((movie) => (
             <div
-              key={movie.id}
+              key={movie.id || movie.imdbID}
               onClick={() => onMovieClick?.(movie)}
               className="flex gap-4 bg-neutral-950 border border-neutral-900 rounded-xl p-4 cursor-pointer hover:border-[#FFB800] hover:bg-neutral-900 transition-all"
             >
@@ -119,7 +113,7 @@ const ContentStream = ({
         </div>
       </div>
 
-      {/* Browse by Genre Chips */}
+      {/* Browse by Genre */}
       <div id="genres" className="mb-10">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-white m-0">Browse by Genre</h2>

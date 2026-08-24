@@ -1,7 +1,9 @@
 import React from 'react';
 
 const Hero = ({ movie, onMovieClick }) => {
-  // Fallback movie if API is loading
+  // High-res horizontal landscape backdrop for Interstellar
+  const defaultBanner = 'https://image.tmdb.org/t/p/original/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg';
+
   const displayMovie = movie || {
     id: 'tt0816692',
     title: 'INTERSTELLAR',
@@ -11,7 +13,8 @@ const Hero = ({ movie, onMovieClick }) => {
     rating: '8.7',
     director: 'Christopher Nolan',
     plot: 'In the near future around the American Midwest, Cooper, an ex-science engineer and pilot, is tied to his farming land with his daughter Murph and son Tom. As devastating sandstorms ravage Earth\'s crops, the people of Earth...',
-    poster: 'https://images.unsplash.com/photo-1596727147705-61a532a659bd?w=1920&q=80',
+    poster: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
+    banner: defaultBanner,
   };
 
   // Requirement: Opens YouTube search for trailer
@@ -20,22 +23,27 @@ const Hero = ({ movie, onMovieClick }) => {
     window.open(`https://www.youtube.com/results?search_query=${query}`, '_blank');
   };
 
-  // Opens the Movie Detail Modal when clicking "More Info"
+  // Opens the Movie Detail Modal
   const handleMoreInfo = () => {
     if (onMovieClick) {
       onMovieClick(displayMovie);
     }
   };
 
+  // Use banner if available; otherwise use default horizontal backdrop
+  const bgImage = displayMovie.banner && displayMovie.banner !== displayMovie.poster 
+    ? displayMovie.banner 
+    : defaultBanner;
+
   return (
     <section 
       id="home"
       className="relative w-full max-w-[1440px] h-[680px] mx-auto overflow-hidden bg-cinedark"
     >
-      {/* Background Image */}
+      {/* Background Image - bg-top ensures head & upper body are visible */}
       <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url('${displayMovie.banner || displayMovie.poster}')` }}
+        className="absolute inset-0 bg-cover bg-top"
+        style={{ backgroundImage: `url('${bgImage}')` }}
       ></div>
 
       {/* Dark Overlays for Text Contrast */}

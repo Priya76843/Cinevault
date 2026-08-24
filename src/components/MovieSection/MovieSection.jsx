@@ -1,7 +1,14 @@
 import React from 'react';
 import MovieCard from '../MovieCard/MovieCard';
 
-const MovieSection = ({ title, movies = [], cols = 5, onMovieClick }) => {
+const MovieSection = ({
+  title,
+  movies = [],
+  cols = 5,
+  onMovieClick,
+  onCompare,
+  compareList = [],
+}) => {
   const gridColsClass = {
     3: 'grid-cols-3',
     4: 'grid-cols-4',
@@ -24,6 +31,8 @@ const MovieSection = ({ title, movies = [], cols = 5, onMovieClick }) => {
             key={movie.id || movie.imdbID || index}
             movie={movie}
             onClick={onMovieClick}
+            onCompare={onCompare}
+            compareList={compareList}
           />
         ))}
       </div>

@@ -1,7 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
-/* Custom colors for Tailwind v4 */
 @theme {
   --color-cineyellow: #FFB800;
   --color-cinedark: #080808;
@@ -9,50 +8,42 @@
 
 :root {
   font-family: 'Inter', sans-serif;
-  background-color: #080808;
-  color: #ffffff;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
 
-html {
-  scroll-behavior: smooth;
-}
-
+/* DEFAULT DARK MODE */
 body {
   margin: 0;
-  min-width: 320px;
   background-color: #080808;
   color: #ffffff;
 }
 
-button,
-input {
-  font-family: inherit;
+/* === LIGHT MODE OVERRIDES === */
+body.light-mode {
+  background-color: #f9fafb !important;
+  color: #111827 !important;
 }
 
-/* Line clamp utility */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
+body.light-mode .bg-\[\#080808\], 
+body.light-mode .bg-cinedark { background-color: #ffffff !important; }
 
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
+body.light-mode .bg-neutral-900, 
+body.light-mode .bg-\[\#0c0c10\],
+body.light-mode .bg-\[\#111\] { background-color: #f3f4f6 !important; }
 
-/* Hide scrollbar */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
+body.light-mode .bg-neutral-950 { background-color: #ffffff !important; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+
+body.light-mode .text-white { color: #111827 !important; }
+body.light-mode .text-neutral-400 { color: #4b5563 !important; }
+body.light-mode .text-neutral-500 { color: #6b7280 !important; }
+
+body.light-mode .border-neutral-800, 
+body.light-mode .border-neutral-900 { border-color: #e5e7eb !important; }
+
+/* Utilities */
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
