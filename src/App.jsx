@@ -8,12 +8,19 @@ import MovieModal from './components/MovieModal/MovieModal';
 import LoadingState from './components/Loading/LoadingState';
 import ErrorState from './components/ErrorMessage/ErrorState';
 import CompareModal from './components/CompareModal/CompareModal';
-import { searchMovies, getMovieDetails, fetchCuratedRow } from './services/omdbApi';
+import Watchlist from './components/Watchlist/Watchlist';
+
+import {
+  searchMovies,
+  getMovieDetails,
+  fetchCuratedRow,
+} from './services/omdbApi';
+
 import { movieIDs } from './data/movieids';
 import { mockSearchResults } from './data/mockMovies';
 
 function App() {
-  const [view, setView] = useState('loading'); // 'loading' | 'home' | 'search' | 'error'
+  const [view, setView] = useState('loading');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [selectedMovie, setSelectedMovie] = useState(null);
@@ -24,6 +31,12 @@ function App() {
   const [compareList, setCompareList] = useState([]);
   const [isLightMode, setIsLightMode] = useState(false);
 
+  // WATCHLIST STATE
+  const [watchlist, setWatchlist] = useState(() => {
+    const savedWatchlist = localStorage.getItem('cinevault-watchlist');
+    return savedWatchlist ? JSON.parse(savedWatchlist) : [];
+  });
+
   // HOMEPAGE STATES
   const [heroMovie, setHeroMovie] = useState(null);
   const [trendingMovies, setTrendingMovies] = useState([]);
@@ -31,26 +44,71 @@ function App() {
   const [topRatedMovies, setTopRatedMovies] = useState([]);
   const [comingSoonMovies, setComingSoonMovies] = useState([]);
 
+  // Save watchlist whenever it changes
+  useEffect(() => {
+    localStorage.setItem(
+      'cinevault-watchlist',
+      JSON.stringify(watchlist)
+    );
+  }, [watchlist]);
+
   // Toggle Dark/Light Mode
   const toggleTheme = () => {
     setIsLightMode((prev) => !prev);
     document.body.classList.toggle('light-mode');
   };
 
+  // HANDLE WATCHLIST
+  const handleWatchlist = (movie) => {
+    const movieId = movie.id || movie.imdbID;
+
+    setWatchlist((prev) => {
+      const exists = prev.some(
+        (m) => (m.id || m.imdbID) === movieId
+      );
+
+      if (exists) {
+        return prev.filter(
+          (m) => (m.id || m.imdbID) !== movieId
+        );
+      }
+
+      return [...prev, movie];
+    });
+  };
+
+  // CHECK WHETHER MOVIE IS IN WATCHLIST
+  const isInWatchlist = (movie) => {
+    const movieId = movie.id || movie.imdbID;
+
+    return watchlist.some(
+      (m) => (m.id || m.imdbID) === movieId
+    );
+  };
+
   // HANDLE COMPARE
   const handleCompare = (movie) => {
     const movieId = movie.id || movie.imdbID;
 
-    // 1. If already in list -> remove it
-    if (compareList.some((m) => (m.id || m.imdbID) === movieId)) {
-      setCompareList(compareList.filter((m) => (m.id || m.imdbID) !== movieId));
+    // If already in list -> remove it
+    if (
+      compareList.some(
+        (m) => (m.id || m.imdbID) === movieId
+      )
+    ) {
+      setCompareList(
+        compareList.filter(
+          (m) => (m.id || m.imdbID) !== movieId
+        )
+      );
       return;
     }
 
-    // 2. Add to compare list
+    // Add to compare list
     if (compareList.length < 2) {
       setCompareList([...compareList, movie]);
-      // Close the detail modal so the user can go select movie #2!
+
+      // Close detail modal
       setSelectedMovie(null);
     }
   };
@@ -62,7 +120,10 @@ function App() {
     const loadHomeData = async () => {
       try {
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('API Timeout')), 3500)
+          setTimeout(
+            () => reject(new Error('API Timeout')),
+            3500
+          )
         );
 
         const fetchData = Promise.all([
@@ -73,17 +134,38 @@ function App() {
           fetchCuratedRow(movieIDs.comingSoon),
         ]);
 
-        const [hero, trending, popular, topRated, comingSoon] = await Promise.race([
+        const [
+          hero,
+          trending,
+          popular,
+          topRated,
+          comingSoon,
+        ] = await Promise.race([
           fetchData,
           timeoutPromise,
         ]);
 
         if (isMounted) {
           setHeroMovie(hero || mockSearchResults[1]);
-          setTrendingMovies(trending.length ? trending : mockSearchResults);
-          setPopularMovies(popular.length ? popular : mockSearchResults);
-          setTopRatedMovies(topRated.length ? topRated : mockSearchResults);
-          setComingSoonMovies(comingSoon.length ? comingSoon : mockSearchResults.slice(0, 3));
+
+          setTrendingMovies(
+            trending.length ? trending : mockSearchResults
+          );
+
+          setPopularMovies(
+            popular.length ? popular : mockSearchResults
+          );
+
+          setTopRatedMovies(
+            topRated.length ? topRated : mockSearchResults
+          );
+
+          setComingSoonMovies(
+            comingSoon.length
+              ? comingSoon
+              : mockSearchResults.slice(0, 3)
+          );
+
           setView('home');
         }
       } catch (err) {
@@ -92,7 +174,10 @@ function App() {
           setTrendingMovies(mockSearchResults);
           setPopularMovies(mockSearchResults);
           setTopRatedMovies(mockSearchResults);
-          setComingSoonMovies(mockSearchResults.slice(0, 3));
+          setComingSoonMovies(
+            mockSearchResults.slice(0, 3)
+          );
+
           setView('home');
         }
       }
@@ -115,7 +200,11 @@ function App() {
 
     try {
       const results = await searchMovies(query);
-      setSearchResults(results.length ? results : mockSearchResults);
+
+      setSearchResults(
+        results.length ? results : mockSearchResults
+      );
+
       setView('search');
     } catch (err) {
       setSearchResults(mockSearchResults);
@@ -133,6 +222,7 @@ function App() {
     }
 
     setModalLoading(true);
+
     try {
       const details = await getMovieDetails(movieId);
       setSelectedMovie(details || movie);
@@ -143,7 +233,9 @@ function App() {
     }
   };
 
-  const handleCloseModal = () => setSelectedMovie(null);
+  const handleCloseModal = () => {
+    setSelectedMovie(null);
+  };
 
   const handleBackHome = () => {
     setView('home');
@@ -151,12 +243,16 @@ function App() {
     setSearchResults([]);
   };
 
-  if (view === 'loading') return <LoadingState />;
+  if (view === 'loading') {
+    return <LoadingState />;
+  }
 
   if (view === 'error') {
     return (
       <ErrorState
-        message={errorMessage || 'Failed to load movie data.'}
+        message={
+          errorMessage || 'Failed to load movie data.'
+        }
         onRetry={() => window.location.reload()}
         onHome={handleBackHome}
       />
@@ -165,6 +261,7 @@ function App() {
 
   return (
     <div className="bg-[#080808] min-h-screen transition-colors">
+
       <Navbar
         onSearch={handleSearch}
         onViewChange={setView}
@@ -173,9 +270,14 @@ function App() {
         isLightMode={isLightMode}
       />
 
+      {/* HOME */}
       {view === 'home' && (
         <>
-          <Hero movie={heroMovie} onMovieClick={handleMovieClick} />
+          <Hero
+            movie={heroMovie}
+            onMovieClick={handleMovieClick}
+          />
+
           <ContentStream
             trending={trendingMovies}
             popular={popularMovies}
@@ -186,6 +288,7 @@ function App() {
         </>
       )}
 
+      {/* SEARCH */}
       {view === 'search' && (
         <SearchResults
           query={searchQuery}
@@ -196,6 +299,17 @@ function App() {
         />
       )}
 
+      {/* WATCHLIST */}
+      {view === 'watchlist' && (
+        <Watchlist
+          watchlist={watchlist}
+          onMovieClick={handleMovieClick}
+          onCompare={handleCompare}
+          compareList={compareList}
+          onRemove={handleWatchlist}
+        />
+      )}
+
       <Footer />
 
       {/* Loading Spinner for Modal */}
@@ -203,22 +317,27 @@ function App() {
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60">
           <div className="flex items-center gap-3 bg-[#111] px-6 py-4 rounded-xl border border-neutral-800">
             <div className="w-5 h-5 border-2 border-[#FFB800] border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm text-white">Loading details...</span>
+
+            <span className="text-sm text-white">
+              Loading details...
+            </span>
           </div>
         </div>
       )}
 
-      {/* 1. Movie Detail Modal (passes onCompare and compareList) */}
+      {/* Movie Detail Modal */}
       {selectedMovie && !modalLoading && (
         <MovieModal
           movie={selectedMovie}
           onClose={handleCloseModal}
           onCompare={handleCompare}
           compareList={compareList}
+          onWatchlist={handleWatchlist}
+          isInWatchlist={isInWatchlist(selectedMovie)}
         />
       )}
 
-      {/* 2. Compare Modal (Opens when 2 movies are selected) */}
+      {/* Compare Modal */}
       {compareList.length === 2 && (
         <CompareModal
           movies={compareList}
@@ -226,11 +345,21 @@ function App() {
         />
       )}
 
-      {/* 3. Floating Notification when 1 movie is selected */}
+      {/* Compare Notification */}
       {compareList.length === 1 && (
         <div className="fixed bottom-6 right-6 bg-[#FFB800] text-black px-5 py-3 rounded-xl font-bold shadow-2xl z-[150] animate-bounce flex items-center gap-3 border border-yellow-300">
-          <span>Comparing 1 movie: <strong>{compareList[0]?.title}</strong></span>
-          <span className="text-xs font-normal opacity-80">(Open another movie & click Compare)</span>
+
+          <span>
+            Comparing 1 movie:{' '}
+            <strong>
+              {compareList[0]?.title}
+            </strong>
+          </span>
+
+          <span className="text-xs font-normal opacity-80">
+            (Open another movie & click Compare)
+          </span>
+
           <button
             onClick={() => setCompareList([])}
             className="ml-2 text-xs bg-black text-white px-2.5 py-1 rounded hover:bg-neutral-800 cursor-pointer"
