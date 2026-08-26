@@ -24,7 +24,6 @@ import {
 
 import { movieIDs } from './data/movieIds';
 
-const FAVORITES_KEY = 'cinevault_favorites';
 const WATCHLIST_KEY = 'cinevault-watchlist';
 
 function App() {
@@ -76,35 +75,10 @@ function App() {
       return Array.isArray(parsed)
         ? parsed
         : [];
+
     } catch (error) {
       console.error(
         'Failed to load watchlist:',
-        error
-      );
-
-      return [];
-    }
-  });
-
-  // =====================================================
-  // FAVORITES
-  // =====================================================
-
-  const [favorites, setFavorites] = useState(() => {
-    try {
-      const saved =
-        localStorage.getItem(FAVORITES_KEY);
-
-      if (!saved) return [];
-
-      const parsed = JSON.parse(saved);
-
-      return Array.isArray(parsed)
-        ? parsed
-        : [];
-    } catch (error) {
-      console.error(
-        'Failed to load favorites:',
         error
       );
 
@@ -150,24 +124,6 @@ function App() {
   }, [watchlist]);
 
   // =====================================================
-  // SAVE FAVORITES
-  // =====================================================
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        FAVORITES_KEY,
-        JSON.stringify(favorites)
-      );
-    } catch (error) {
-      console.error(
-        'Failed to save favorites:',
-        error
-      );
-    }
-  }, [favorites]);
-
-  // =====================================================
   // CHECK WATCHLIST
   // =====================================================
 
@@ -202,58 +158,7 @@ function App() {
       if (!movieId) return;
 
       setWatchlist((prev) => {
-        const exists = prev.some(
-          (item) =>
-            (item.id || item.imdbID) === movieId
-        );
 
-        if (exists) {
-          return prev.filter(
-            (item) =>
-              (item.id || item.imdbID) !== movieId
-          );
-        }
-
-        return [
-          ...prev,
-          movie,
-        ];
-      });
-    },
-    []
-  );
-
-  // =====================================================
-  // FAVORITE FUNCTIONS
-  // =====================================================
-
-  const isFavorite = useCallback(
-    (movie) => {
-      if (!movie) return false;
-
-      const movieId =
-        movie.id || movie.imdbID;
-
-      if (!movieId) return false;
-
-      return favorites.some(
-        (item) =>
-          (item.id || item.imdbID) === movieId
-      );
-    },
-    [favorites]
-  );
-
-  const handleFavorite = useCallback(
-    (movie) => {
-      if (!movie) return;
-
-      const movieId =
-        movie.id || movie.imdbID;
-
-      if (!movieId) return;
-
-      setFavorites((prev) => {
         const exists = prev.some(
           (item) =>
             (item.id || item.imdbID) === movieId
@@ -281,6 +186,7 @@ function App() {
 
   const toggleTheme = () => {
     setIsLightMode((prev) => {
+
       const newValue = !prev;
 
       document.body.classList.toggle(
@@ -298,6 +204,7 @@ function App() {
 
   const handleCompare = useCallback(
     (movie) => {
+
       if (!movie) return;
 
       const movieId =
@@ -316,6 +223,7 @@ function App() {
       // ==========================================
 
       if (alreadyComparing) {
+
         setCompareList((prev) =>
           prev.filter(
             (item) =>
@@ -333,6 +241,7 @@ function App() {
       if (compareList.length < 2) {
 
         setCompareList((prev) => {
+
           const updated = [
             ...prev,
             movie,
@@ -362,23 +271,30 @@ function App() {
 
   const loadHomeData = useCallback(
     async () => {
+
       try {
+
         setView('loading');
         setErrorMessage('');
 
         const timeoutPromise =
           new Promise((_, reject) => {
+
             setTimeout(() => {
+
               reject(
                 new Error(
                   'Network request timed out. Please check your connection or API key.'
                 )
               );
+
             }, 5000);
+
           });
 
         const fetchData =
           Promise.all([
+
             getMovieDetails(
               movieIDs.hero
             ),
@@ -398,6 +314,7 @@ function App() {
             fetchCuratedRow(
               movieIDs.comingSoon
             ),
+
           ]);
 
         const [
@@ -415,9 +332,11 @@ function App() {
           !hero &&
           !trending.length
         ) {
+
           throw new Error(
             'Failed to retrieve movie data from OMDb API.'
           );
+
         }
 
         setHeroMovie(hero);
@@ -454,6 +373,7 @@ function App() {
 
         setView('error');
       }
+
     },
     []
   );
@@ -463,6 +383,7 @@ function App() {
   // =====================================================
 
   useEffect(() => {
+
     const timer =
       setTimeout(() => {
         loadHomeData();
@@ -470,6 +391,7 @@ function App() {
 
     return () =>
       clearTimeout(timer);
+
   }, [loadHomeData]);
 
   // =====================================================
@@ -488,6 +410,7 @@ function App() {
   const handleSearch = async (
     query
   ) => {
+
     if (!query?.trim()) return;
 
     setSearchQuery(query);
@@ -530,6 +453,7 @@ function App() {
   const handleMovieClick = async (
     movie
   ) => {
+
     if (!movie) return;
 
     const movieId =
@@ -541,7 +465,9 @@ function App() {
       movie.plot &&
       movie.director
     ) {
+
       setSelectedMovie(movie);
+
       return;
     }
 
@@ -586,9 +512,13 @@ function App() {
   // =====================================================
 
   const handleBackHome = () => {
+
     setView('home');
+
     setSearchQuery('');
+
     setSearchResults([]);
+
     setErrorMessage('');
   };
 
@@ -605,6 +535,7 @@ function App() {
   // =====================================================
 
   if (view === 'error') {
+
     return (
       <ErrorState
         message={
@@ -622,12 +553,14 @@ function App() {
   // =====================================================
 
   return (
-    <div className="
-      bg-[#080808]
-      min-h-screen
-      transition-colors
-      duration-300
-    ">
+    <div
+      className="
+        bg-[#080808]
+        min-h-screen
+        transition-colors
+        duration-300
+      "
+    >
 
       {/* ================================================
           NAVBAR
@@ -649,6 +582,7 @@ function App() {
 
       {view === 'home' && (
         <>
+
           <Hero
             movie={heroMovie}
             onMovieClick={handleMovieClick}
@@ -660,18 +594,31 @@ function App() {
             topRated={topRatedMovies}
             comingSoon={comingSoonMovies}
 
-            favorites={favorites}
+            favorites={watchlist}
 
-            onMovieClick={handleMovieClick}
+            onMovieClick={
+              handleMovieClick
+            }
 
-            onCompare={handleCompare}
+            onCompare={
+              handleCompare
+            }
 
-            compareList={compareList}
+            compareList={
+              compareList
+            }
 
             // HEART = WATCHLIST
-            onFavorite={handleWatchlist}
-            isFavorite={isInWatchlist}
+
+            onFavorite={
+              handleWatchlist
+            }
+
+            isFavorite={
+              isInWatchlist
+            }
           />
+
         </>
       )}
 
@@ -683,14 +630,30 @@ function App() {
         <SearchResults
           query={searchQuery}
           results={searchResults}
-          onMovieClick={handleMovieClick}
-          onBack={handleBackHome}
-          onSearch={handleSearch}
+
+          onMovieClick={
+            handleMovieClick
+          }
+
+          onBack={
+            handleBackHome
+          }
+
+          onSearch={
+            handleSearch
+          }
 
           // HEART = WATCHLIST
+
           favorites={watchlist}
-          onFavorite={handleWatchlist}
-          isFavorite={isInWatchlist}
+
+          onFavorite={
+            handleWatchlist
+          }
+
+          isFavorite={
+            isInWatchlist
+          }
         />
       )}
 
@@ -701,8 +664,14 @@ function App() {
       {view === 'watchlist' && (
         <Watchlist
           watchlist={watchlist}
-          onMovieClick={handleMovieClick}
-          onRemove={handleWatchlist}
+
+          onMovieClick={
+            handleMovieClick
+          }
+
+          onRemove={
+            handleWatchlist
+          }
         />
       )}
 
@@ -717,39 +686,45 @@ function App() {
       ================================================= */}
 
       {modalLoading && (
-        <div className="
-          fixed
-          inset-0
-          z-[110]
-          flex
-          items-center
-          justify-center
-          bg-black/60
-          backdrop-blur-sm
-        ">
-
-          <div className="
+        <div
+          className="
+            fixed
+            inset-0
+            z-[110]
             flex
             items-center
-            gap-3
-            bg-[#111]
-            px-6
-            py-4
-            rounded-xl
-            border
-            border-neutral-800
-            shadow-2xl
-          ">
+            justify-center
+            bg-black/60
+            backdrop-blur-sm
+          "
+        >
 
-            <div className="
-              w-5
-              h-5
-              border-2
-              border-[#FFB800]
-              border-t-transparent
-              rounded-full
-              animate-spin
-            " />
+          <div
+            className="
+              flex
+              items-center
+              gap-3
+              bg-[#111]
+              px-6
+              py-4
+              rounded-xl
+              border
+              border-neutral-800
+              shadow-2xl
+            "
+          >
+
+            <div
+              className="
+                w-5
+                h-5
+                border-2
+                border-[#FFB800]
+                border-t-transparent
+                rounded-full
+                animate-spin
+              "
+            />
 
             <span className="text-sm text-white">
               Loading details...
@@ -766,19 +741,35 @@ function App() {
 
       {selectedMovie &&
         !modalLoading && (
+
           <MovieModal
             movie={selectedMovie}
-            onClose={handleCloseModal}
-            onCompare={handleCompare}
-            compareList={compareList}
+
+            onClose={
+              handleCloseModal
+            }
+
+            onCompare={
+              handleCompare
+            }
+
+            compareList={
+              compareList
+            }
 
             // SAME WATCHLIST STATE
-            onWatchlist={handleWatchlist}
 
-            isInWatchlist={isInWatchlist(
-              selectedMovie
-            )}
+            onWatchlist={
+              handleWatchlist
+            }
+
+            isInWatchlist={
+              isInWatchlist(
+                selectedMovie
+              )
+            }
           />
+
         )}
 
       {/* ================================================
@@ -787,13 +778,25 @@ function App() {
 
       {showCompareAnimation &&
         compareList.length === 2 && (
+
           <CompareAnimation
-            movieA={compareList[0]}
-            movieB={compareList[1]}
+            movieA={
+              compareList[0]
+            }
+
+            movieB={
+              compareList[1]
+            }
+
             onComplete={() => {
-              setShowCompareAnimation(false);
+
+              setShowCompareAnimation(
+                false
+              );
+
             }}
           />
+
         )}
 
       {/* ================================================
@@ -802,12 +805,19 @@ function App() {
 
       {compareList.length === 2 &&
         !showCompareAnimation && (
+
           <CompareModal
-            movies={compareList}
+            movies={
+              compareList
+            }
+
             onClose={() => {
+
               setCompareList([]);
+
             }}
           />
+
         )}
 
       {/* ================================================
@@ -816,38 +826,44 @@ function App() {
 
       {compareList.length === 1 &&
         !showCompareAnimation && (
-          <div className="
-            fixed
-            bottom-6
-            right-6
-            bg-[#FFB800]
-            text-black
-            px-5
-            py-3
-            rounded-xl
-            font-bold
-            shadow-2xl
-            z-[150]
-            animate-bounce
-            flex
-            items-center
-            gap-3
-            border
-            border-yellow-300
-          ">
+
+          <div
+            className="
+              fixed
+              bottom-6
+              right-6
+              bg-[#FFB800]
+              text-black
+              px-5
+              py-3
+              rounded-xl
+              font-bold
+              shadow-2xl
+              z-[150]
+              animate-bounce
+              flex
+              items-center
+              gap-3
+              border
+              border-yellow-300
+            "
+          >
 
             <span>
               Comparing 1 movie:{' '}
+
               <strong>
                 {compareList[0]?.title}
               </strong>
             </span>
 
-            <span className="
-              text-xs
-              font-normal
-              opacity-80
-            ">
+            <span
+              className="
+                text-xs
+                font-normal
+                opacity-80
+              "
+            >
               Open another movie & click Compare
             </span>
 
@@ -872,6 +888,7 @@ function App() {
             </button>
 
           </div>
+
         )}
 
     </div>

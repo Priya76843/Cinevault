@@ -1,4 +1,4 @@
-import React from 'react';
+//import React from 'react';
 
 const CompareModal = ({ movies = [], onClose }) => {
   if (movies.length !== 2) return null;
