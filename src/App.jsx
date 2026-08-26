@@ -13,6 +13,7 @@ import MovieModal from './components/MovieModal/MovieModal';
 import LoadingState from './components/Loading/LoadingState';
 import ErrorState from './components/ErrorMessage/ErrorState';
 import CompareModal from './components/CompareModal/CompareModal';
+import CompareAnimation from './components/CompareAnimation/CompareAnimation';
 import Watchlist from './components/Watchlist/Watchlist';
 
 import {
@@ -27,6 +28,7 @@ const FAVORITES_KEY = 'cinevault_favorites';
 const WATCHLIST_KEY = 'cinevault-watchlist';
 
 function App() {
+
   // =====================================================
   // MAIN VIEW
   // =====================================================
@@ -49,6 +51,9 @@ function App() {
 
   const [compareList, setCompareList] = useState([]);
 
+  const [showCompareAnimation, setShowCompareAnimation] =
+    useState(false);
+
   // =====================================================
   // THEME
   // =====================================================
@@ -57,18 +62,20 @@ function App() {
 
   // =====================================================
   // WATCHLIST
-  // HEART + MODAL WATCHLIST USE THIS SAME STATE
   // =====================================================
 
   const [watchlist, setWatchlist] = useState(() => {
     try {
-      const saved = localStorage.getItem(WATCHLIST_KEY);
+      const saved =
+        localStorage.getItem(WATCHLIST_KEY);
 
       if (!saved) return [];
 
       const parsed = JSON.parse(saved);
 
-      return Array.isArray(parsed) ? parsed : [];
+      return Array.isArray(parsed)
+        ? parsed
+        : [];
     } catch (error) {
       console.error(
         'Failed to load watchlist:',
@@ -81,7 +88,6 @@ function App() {
 
   // =====================================================
   // FAVORITES
-  // Kept separately for recommendation functionality
   // =====================================================
 
   const [favorites, setFavorites] = useState(() => {
@@ -93,7 +99,9 @@ function App() {
 
       const parsed = JSON.parse(saved);
 
-      return Array.isArray(parsed) ? parsed : [];
+      return Array.isArray(parsed)
+        ? parsed
+        : [];
     } catch (error) {
       console.error(
         'Failed to load favorites:',
@@ -182,9 +190,6 @@ function App() {
 
   // =====================================================
   // TOGGLE WATCHLIST
-  // THIS IS USED BY:
-  // 1. HEART
-  // 2. MOVIE MODAL
   // =====================================================
 
   const handleWatchlist = useCallback(
@@ -202,7 +207,6 @@ function App() {
             (item.id || item.imdbID) === movieId
         );
 
-        // REMOVE
         if (exists) {
           return prev.filter(
             (item) =>
@@ -210,8 +214,10 @@ function App() {
           );
         }
 
-        // ADD
-        return [...prev, movie];
+        return [
+          ...prev,
+          movie,
+        ];
       });
     },
     []
@@ -260,7 +266,10 @@ function App() {
           );
         }
 
-        return [...prev, movie];
+        return [
+          ...prev,
+          movie,
+        ];
       });
     },
     []
@@ -302,6 +311,10 @@ function App() {
             (item.id || item.imdbID) === movieId
         );
 
+      // ==========================================
+      // REMOVE MOVIE
+      // ==========================================
+
       if (alreadyComparing) {
         setCompareList((prev) =>
           prev.filter(
@@ -313,11 +326,29 @@ function App() {
         return;
       }
 
+      // ==========================================
+      // ADD MOVIE
+      // ==========================================
+
       if (compareList.length < 2) {
-        setCompareList((prev) => [
-          ...prev,
-          movie,
-        ]);
+
+        setCompareList((prev) => {
+          const updated = [
+            ...prev,
+            movie,
+          ];
+
+          // ========================================
+          // SECOND MOVIE SELECTED
+          // START COLLISION
+          // ========================================
+
+          if (updated.length === 2) {
+            setShowCompareAnimation(true);
+          }
+
+          return updated;
+        });
 
         setSelectedMovie(null);
       }
@@ -390,13 +421,27 @@ function App() {
         }
 
         setHeroMovie(hero);
-        setTrendingMovies(trending);
-        setPopularMovies(popular);
-        setTopRatedMovies(topRated);
-        setComingSoonMovies(comingSoon);
+
+        setTrendingMovies(
+          trending
+        );
+
+        setPopularMovies(
+          popular
+        );
+
+        setTopRatedMovies(
+          topRated
+        );
+
+        setComingSoonMovies(
+          comingSoon
+        );
 
         setView('home');
+
       } catch (error) {
+
         console.error(
           'OMDb Load Error:',
           error
@@ -404,7 +449,7 @@ function App() {
 
         setErrorMessage(
           error.message ||
-            'Failed to load movie data from OMDb API.'
+          'Failed to load movie data from OMDb API.'
         );
 
         setView('error');
@@ -418,11 +463,13 @@ function App() {
   // =====================================================
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      loadHomeData();
-    }, 0);
+    const timer =
+      setTimeout(() => {
+        loadHomeData();
+      }, 0);
 
-    return () => clearTimeout(timer);
+    return () =>
+      clearTimeout(timer);
   }, [loadHomeData]);
 
   // =====================================================
@@ -438,7 +485,9 @@ function App() {
   // SEARCH
   // =====================================================
 
-  const handleSearch = async (query) => {
+  const handleSearch = async (
+    query
+  ) => {
     if (!query?.trim()) return;
 
     setSearchQuery(query);
@@ -448,13 +497,18 @@ function App() {
     setErrorMessage('');
 
     try {
+
       const results =
         await searchMovies(query);
 
-      setSearchResults(results);
+      setSearchResults(
+        results
+      );
 
       setView('search');
+
     } catch (error) {
+
       console.error(
         'Search Error:',
         error
@@ -462,7 +516,7 @@ function App() {
 
       setErrorMessage(
         error.message ||
-          'Failed to fetch search results from OMDb API.'
+        'Failed to fetch search results from OMDb API.'
       );
 
       setView('error');
@@ -494,6 +548,7 @@ function App() {
     setModalLoading(true);
 
     try {
+
       const details =
         await getMovieDetails(
           movieId
@@ -502,14 +557,18 @@ function App() {
       setSelectedMovie(
         details || movie
       );
+
     } catch (error) {
+
       console.error(
         'Movie details error:',
         error
       );
 
       setSelectedMovie(movie);
+
     } finally {
+
       setModalLoading(false);
     }
   };
@@ -563,11 +622,16 @@ function App() {
   // =====================================================
 
   return (
-    <div className="bg-[#080808] min-h-screen transition-colors duration-300">
+    <div className="
+      bg-[#080808]
+      min-h-screen
+      transition-colors
+      duration-300
+    ">
 
-      {/* ==================================================
+      {/* ================================================
           NAVBAR
-      ================================================== */}
+      ================================================= */}
 
       <Navbar
         onSearch={handleSearch}
@@ -579,9 +643,9 @@ function App() {
         favorites={watchlist}
       />
 
-      {/* ==================================================
+      {/* ================================================
           HOME
-      ================================================== */}
+      ================================================= */}
 
       {view === 'home' && (
         <>
@@ -611,9 +675,9 @@ function App() {
         </>
       )}
 
-      {/* ==================================================
+      {/* ================================================
           SEARCH
-      ================================================== */}
+      ================================================= */}
 
       {view === 'search' && (
         <SearchResults
@@ -630,9 +694,9 @@ function App() {
         />
       )}
 
-      {/* ==================================================
+      {/* ================================================
           WATCHLIST
-      ================================================== */}
+      ================================================= */}
 
       {view === 'watchlist' && (
         <Watchlist
@@ -642,22 +706,50 @@ function App() {
         />
       )}
 
-      {/* ==================================================
+      {/* ================================================
           FOOTER
-      ================================================== */}
+      ================================================= */}
 
       <Footer />
 
-      {/* ==================================================
+      {/* ================================================
           MODAL LOADING
-      ================================================== */}
+      ================================================= */}
 
       {modalLoading && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="
+          fixed
+          inset-0
+          z-[110]
+          flex
+          items-center
+          justify-center
+          bg-black/60
+          backdrop-blur-sm
+        ">
 
-          <div className="flex items-center gap-3 bg-[#111] px-6 py-4 rounded-xl border border-neutral-800 shadow-2xl">
+          <div className="
+            flex
+            items-center
+            gap-3
+            bg-[#111]
+            px-6
+            py-4
+            rounded-xl
+            border
+            border-neutral-800
+            shadow-2xl
+          ">
 
-            <div className="w-5 h-5 border-2 border-[#FFB800] border-t-transparent rounded-full animate-spin" />
+            <div className="
+              w-5
+              h-5
+              border-2
+              border-[#FFB800]
+              border-t-transparent
+              rounded-full
+              animate-spin
+            " />
 
             <span className="text-sm text-white">
               Loading details...
@@ -668,9 +760,9 @@ function App() {
         </div>
       )}
 
-      {/* ==================================================
+      {/* ================================================
           MOVIE MODAL
-      ================================================== */}
+      ================================================= */}
 
       {selectedMovie &&
         !modalLoading && (
@@ -689,50 +781,98 @@ function App() {
           />
         )}
 
-      {/* ==================================================
+      {/* ================================================
+          COMPARE COLLISION ANIMATION
+      ================================================= */}
+
+      {showCompareAnimation &&
+        compareList.length === 2 && (
+          <CompareAnimation
+            movieA={compareList[0]}
+            movieB={compareList[1]}
+            onComplete={() => {
+              setShowCompareAnimation(false);
+            }}
+          />
+        )}
+
+      {/* ================================================
           COMPARE MODAL
-      ================================================== */}
+      ================================================= */}
 
-      {compareList.length === 2 && (
-        <CompareModal
-          movies={compareList}
-          onClose={() => {
-            setCompareList([]);
-          }}
-        />
-      )}
+      {compareList.length === 2 &&
+        !showCompareAnimation && (
+          <CompareModal
+            movies={compareList}
+            onClose={() => {
+              setCompareList([]);
+            }}
+          />
+        )}
 
-      {/* ==================================================
+      {/* ================================================
           COMPARE NOTIFICATION
-      ================================================== */}
+      ================================================= */}
 
-      {compareList.length === 1 && (
-        <div className="fixed bottom-6 right-6 bg-[#FFB800] text-black px-5 py-3 rounded-xl font-bold shadow-2xl z-[150] animate-bounce flex items-center gap-3 border border-yellow-300">
+      {compareList.length === 1 &&
+        !showCompareAnimation && (
+          <div className="
+            fixed
+            bottom-6
+            right-6
+            bg-[#FFB800]
+            text-black
+            px-5
+            py-3
+            rounded-xl
+            font-bold
+            shadow-2xl
+            z-[150]
+            animate-bounce
+            flex
+            items-center
+            gap-3
+            border
+            border-yellow-300
+          ">
 
-          <span>
-            Comparing 1 movie:{' '}
-            <strong>
-              {compareList[0]?.title}
-            </strong>
-          </span>
+            <span>
+              Comparing 1 movie:{' '}
+              <strong>
+                {compareList[0]?.title}
+              </strong>
+            </span>
 
-          <span className="text-xs font-normal opacity-80">
-            Open another movie &
-            click Compare
-          </span>
+            <span className="
+              text-xs
+              font-normal
+              opacity-80
+            ">
+              Open another movie & click Compare
+            </span>
 
-          <button
-            type="button"
-            onClick={() =>
-              setCompareList([])
-            }
-            className="ml-2 text-xs bg-black text-white px-2.5 py-1 rounded hover:bg-neutral-800 cursor-pointer"
-          >
-            Cancel ✕
-          </button>
+            <button
+              type="button"
+              onClick={() =>
+                setCompareList([])
+              }
+              className="
+                ml-2
+                text-xs
+                bg-black
+                text-white
+                px-2.5
+                py-1
+                rounded
+                hover:bg-neutral-800
+                cursor-pointer
+              "
+            >
+              Cancel ✕
+            </button>
 
-        </div>
-      )}
+          </div>
+        )}
 
     </div>
   );
