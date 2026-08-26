@@ -1,4 +1,3 @@
-
 import MovieCard from '../MovieCard/MovieCard';
 
 const MovieSection = ({
@@ -9,7 +8,9 @@ const MovieSection = ({
   onCompare,
   compareList = [],
   onFavorite,
+  isFavorite,
 }) => {
+
   const gridColsClass = {
     3: 'grid-cols-3',
     4: 'grid-cols-4',
@@ -19,38 +20,68 @@ const MovieSection = ({
   }[cols] || 'grid-cols-5';
 
   const gapClass =
-    cols === 8 ? 'gap-3.5' : 'gap-5';
+    cols === 8
+      ? 'gap-3.5'
+      : 'gap-5';
 
   return (
     <div className="mb-10">
 
-      {/* Section Header */}
+      {/* ======================================
+          SECTION HEADER
+      ====================================== */}
+
       {title && (
         <div className="flex justify-between items-center mb-4">
+
           <h2 className="text-xl font-bold text-white m-0">
             {title}
           </h2>
+
         </div>
       )}
 
-      {/* Movie Grid */}
+      {/* ======================================
+          MOVIE GRID
+      ====================================== */}
+
       <div
         className={`grid ${gridColsClass} ${gapClass}`}
       >
-        {movies.map((movie, index) => (
-          <MovieCard
-            key={
-              movie.id ||
-              movie.imdbID ||
-              index
-            }
-            movie={movie}
-            onClick={onMovieClick}
-            onCompare={onCompare}
-            compareList={compareList}
-            onFavorite={onFavorite}
-          />
-        ))}
+
+        {movies.map(
+          (movie, index) => (
+
+            <div
+              key={
+                movie.id ||
+                movie.imdbID ||
+                index
+              }
+              className="animate-card-enter"
+              style={{
+                animationDelay: `${index * 80}ms`,
+              }}
+            >
+
+              <MovieCard
+                movie={movie}
+                onClick={onMovieClick}
+                onCompare={onCompare}
+                compareList={compareList}
+                onFavorite={onFavorite}
+                isFavorite={
+                  isFavorite
+                    ? isFavorite(movie)
+                    : false
+                }
+              />
+
+            </div>
+
+          )
+        )}
+
       </div>
 
     </div>

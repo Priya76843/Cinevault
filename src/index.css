@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 @import "tailwindcss";
 
 @theme {
@@ -10,40 +11,241 @@
   font-family: 'Inter', sans-serif;
 }
 
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+* {
+  box-sizing: border-box;
+}
 
-/* DEFAULT DARK MODE */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
+
+/* =====================================================
+   DEFAULT DARK MODE
+===================================================== */
+
 body {
   margin: 0;
   background-color: #080808;
   color: #ffffff;
 }
 
-/* === LIGHT MODE OVERRIDES === */
+/* =====================================================
+   LIGHT MODE
+===================================================== */
+
 body.light-mode {
   background-color: #f9fafb !important;
   color: #111827 !important;
 }
 
-body.light-mode .bg-\[\#080808\], 
-body.light-mode .bg-cinedark { background-color: #ffffff !important; }
+body.light-mode .bg-\[\#080808\],
+body.light-mode .bg-cinedark {
+  background-color: #ffffff !important;
+}
 
-body.light-mode .bg-neutral-900, 
+body.light-mode .bg-neutral-900,
 body.light-mode .bg-\[\#0c0c10\],
-body.light-mode .bg-\[\#111\] { background-color: #f3f4f6 !important; }
+body.light-mode .bg-\[\#111\] {
+  background-color: #f3f4f6 !important;
+}
 
-body.light-mode .bg-neutral-950 { background-color: #ffffff !important; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+body.light-mode .bg-neutral-950 {
+  background-color: #ffffff !important;
+  box-shadow:
+    0 4px 6px -1px
+    rgba(0, 0, 0, 0.1);
+}
 
-body.light-mode .text-white { color: #111827 !important; }
-body.light-mode .text-neutral-400 { color: #4b5563 !important; }
-body.light-mode .text-neutral-500 { color: #6b7280 !important; }
+body.light-mode .text-white {
+  color: #111827 !important;
+}
 
-body.light-mode .border-neutral-800, 
-body.light-mode .border-neutral-900 { border-color: #e5e7eb !important; }
+body.light-mode .text-neutral-400 {
+  color: #4b5563 !important;
+}
 
-/* Utilities */
-.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+body.light-mode .text-neutral-500 {
+  color: #6b7280 !important;
+}
+
+body.light-mode .border-neutral-800,
+body.light-mode .border-neutral-900 {
+  border-color: #e5e7eb !important;
+}
+
+/* =====================================================
+   HERO ZOOM
+===================================================== */
+
+.hero-zoom {
+  animation:
+    hero-slow-zoom 18s ease-in-out infinite alternate;
+}
+
+@keyframes hero-slow-zoom {
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(1.12);
+  }
+}
+
+/* =====================================================
+   CARD STAGGER ANIMATION
+===================================================== */
+
+.animate-card-enter {
+  opacity: 0;
+  animation:
+    card-enter 0.55s ease-out forwards;
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform:
+      translateY(25px)
+      scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+/* =====================================================
+   HEART POP
+===================================================== */
+
+.animate-heart-pop {
+  animation:
+    heart-pop 0.45s ease-out;
+}
+
+@keyframes heart-pop {
+  0% {
+    transform: scale(1);
+  }
+
+  35% {
+    transform: scale(1.45);
+  }
+
+  60% {
+    transform: scale(0.9);
+  }
+
+  80% {
+    transform: scale(1.15);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* =====================================================
+   MODAL BACKDROP
+===================================================== */
+
+.animate-modal-backdrop {
+  animation:
+    modal-backdrop 0.25s ease-out forwards;
+}
+
+@keyframes modal-backdrop {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* =====================================================
+   MODAL CONTENT
+===================================================== */
+
+.animate-modal-content {
+  animation:
+    modal-content 0.35s
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    )
+    forwards;
+}
+
+@keyframes modal-content {
+  from {
+    opacity: 0;
+    transform:
+      scale(0.92)
+      translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      scale(1)
+      translateY(0);
+  }
+}
+
+/* =====================================================
+   UTILITIES
+===================================================== */
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+/* ==========================================
+   CINEVAULT HERO ZOOM ANIMATION
+========================================== */
+
+@keyframes heroZoom {
+  0% {
+    transform: scale(1.12);
+  }
+
+  50% {
+    transform: scale(1.22);
+  }
+
+  100% {
+    transform: scale(1.12);
+  }
+}
+
+.animate-heroZoom {
+  animation: heroZoom 18s ease-in-out infinite;
+  transform-origin: center center;
+}

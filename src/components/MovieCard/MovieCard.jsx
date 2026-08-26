@@ -1,110 +1,170 @@
-import { useState } from 'react';
-
-const FAVORITES_KEY = 'cinevault_favorites';
+import React, {
+  useEffect,
+  useState,
+} from 'react';
 
 const MovieCard = ({
   movie,
   onClick,
   onFavorite,
+  isFavorite = false,
 }) => {
-  const movieId = movie.id || movie.imdbID;
+  const [heartPop, setHeartPop] =
+    useState(false);
 
-  // ==========================================
-  // CHECK INITIAL FAVORITE STATUS
-  // ==========================================
-  const [isFavorite, setIsFavorite] = useState(() => {
-    try {
-      const saved = JSON.parse(
-        localStorage.getItem(FAVORITES_KEY) || '[]'
-      );
-
-      return saved.some(
-        (item) =>
-          (item.id || item.imdbID) === movieId
-      );
-    } catch {
-      return false;
-    }
-  });
-
-  // ==========================================
-  // ❤️ FAVORITE BUTTON
-  // ==========================================
   const handleFavoriteClick = (e) => {
     e.stopPropagation();
 
-    // Let App.jsx handle the actual favorite logic
     if (onFavorite) {
       onFavorite(movie);
     }
 
-    // Immediately update heart UI
-    setIsFavorite((prev) => !prev);
+    // ❤️ HEART POP ANIMATION
+    setHeartPop(false);
+
+    requestAnimationFrame(() => {
+      setHeartPop(true);
+    });
   };
+
+  // Reset animation class
+  useEffect(() => {
+    if (!heartPop) return;
+
+    const timer = setTimeout(() => {
+      setHeartPop(false);
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [heartPop]);
 
   return (
     <div
-      className="cursor-pointer group transition-transform hover:-translate-y-1 relative"
-      onClick={() => onClick && onClick(movie)}
+      className="
+        cursor-pointer
+        group
+        relative
+        transition-all
+        duration-300
+        hover:-translate-y-2
+      "
+      onClick={() =>
+        onClick && onClick(movie)
+      }
     >
 
       {/* ======================================
           POSTER
-      ======================================= */}
-      <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-neutral-900">
+      ====================================== */}
+
+      <div
+        className="
+          relative
+          w-full
+          aspect-[2/3]
+          rounded-lg
+          overflow-hidden
+          bg-neutral-900
+          shadow-lg
+          transition-all
+          duration-300
+          group-hover:shadow-2xl
+        "
+      >
 
         <img
-          src={movie.poster}
-          alt={movie.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          src={movie?.poster}
+          alt={
+            movie?.title || 'Movie'
+          }
+          className="
+            w-full
+            h-full
+            object-cover
+            transition-transform
+            duration-700
+            ease-out
+            group-hover:scale-110
+          "
           onError={(e) => {
-            e.target.src =
+            e.currentTarget.src =
               'https://via.placeholder.com/300x450?text=No+Poster';
           }}
         />
 
         {/* ====================================
-            ❤️ HEART
+            DARK HOVER OVERLAY
         ==================================== */}
+
+        <div
+          className="
+            absolute
+            inset-0
+            bg-black/0
+            group-hover:bg-black/10
+            transition-all
+            duration-300
+          "
+        />
+
+        {/* ====================================
+            HEART
+        ==================================== */}
+
         <button
           type="button"
-          onClick={handleFavoriteClick}
+          onClick={
+            handleFavoriteClick
+          }
           title={
             isFavorite
-              ? 'Remove favorite'
-              : 'Add favorite'
+              ? 'Remove from watchlist'
+              : 'Add to watchlist'
           }
           aria-label={
             isFavorite
-              ? `Remove ${movie.title} from favorites`
-              : `Add ${movie.title} to favorites`
+              ? `Remove ${
+                  movie?.title ||
+                  'movie'
+                } from watchlist`
+              : `Add ${
+                  movie?.title ||
+                  'movie'
+                } to watchlist`
           }
           className={`
             absolute
             top-2
             right-2
-            w-8
-            h-8
+            w-9
+            h-9
             rounded-full
             flex
             items-center
             justify-center
             z-20
             cursor-pointer
+            shadow-md
             transition-all
             duration-300
-            shadow-md
 
             ${
               isFavorite
-                ? 'bg-black/75 text-red-500 opacity-100 scale-105'
+                ? 'bg-black/80 text-red-500 opacity-100 scale-105'
                 : 'bg-black/70 text-white opacity-0 group-hover:opacity-100 hover:text-red-400 hover:scale-110'
+            }
+
+            ${
+              heartPop
+                ? 'animate-heart-pop'
+                : ''
             }
           `}
         >
+
           <svg
-            width="16"
-            height="16"
+            width="17"
+            height="17"
             viewBox="0 0 24 24"
             fill={
               isFavorite
@@ -113,17 +173,38 @@ const MovieCard = ({
             }
             stroke="currentColor"
             strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
           </svg>
+
         </button>
 
         {/* ====================================
             RATING
         ==================================== */}
-        {movie.rating &&
+
+        {movie?.rating &&
           movie.rating !== 'N/A' && (
-            <div className="absolute bottom-2 right-2 bg-black/75 backdrop-blur-sm px-1.5 py-0.5 rounded flex items-center gap-1 text-[11px] font-semibold text-white z-10">
+
+            <div className="
+              absolute
+              bottom-2
+              right-2
+              bg-black/75
+              backdrop-blur-sm
+              px-1.5
+              py-0.5
+              rounded
+              flex
+              items-center
+              gap-1
+              text-[11px]
+              font-semibold
+              text-white
+              z-10
+            ">
 
               <svg
                 width="10"
@@ -142,25 +223,27 @@ const MovieCard = ({
               </span>
 
             </div>
+
           )}
 
       </div>
 
       {/* ======================================
           MOVIE INFORMATION
-      ======================================= */}
+      ====================================== */}
+
       <div className="pt-2.5 flex flex-col gap-0.5">
 
         <span className="text-[11px] text-neutral-500 font-medium">
-          {movie.year}
+          {movie?.year}
         </span>
 
         <h3 className="text-sm font-semibold text-white truncate m-0">
-          {movie.title}
+          {movie?.title}
         </h3>
 
         <span className="text-[11px] text-[#FFB800] font-medium">
-          {movie.genre}
+          {movie?.genre}
         </span>
 
       </div>
