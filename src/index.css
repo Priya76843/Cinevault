@@ -249,3 +249,254 @@ body.light-mode .border-neutral-900 {
   animation: heroZoom 18s ease-in-out infinite;
   transform-origin: center center;
 }
+@keyframes posterFlyUpFromRight {
+  0% {
+    opacity: 0;
+    transform: translate(300px, 300px) scale(0.75) rotate(7deg);
+  }
+
+  40% {
+    opacity: 1;
+    transform: translate(160px, 160px) scale(0.85) rotate(4deg);
+  }
+
+  70% {
+    opacity: 1;
+    transform: translate(55px, 55px) scale(0.96) rotate(-2deg);
+  }
+
+  88% {
+    opacity: 1;
+    transform: translate(-10px, -10px) scale(1.02) rotate(1deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+}
+
+.animate-poster-fly-in {
+  animation: posterFlyUpFromRight 0.65s
+    cubic-bezier(0.22, 1, 0.36, 1)
+    both;
+
+  will-change: transform, opacity;
+}
+
+/* =====================================================
+   ADVANCED MOVIE POSTER ANIMATION
+===================================================== */
+
+/* -----------------------------------------------------
+   FLY FROM BOTTOM-RIGHT → UP-LEFT
+----------------------------------------------------- */
+
+@keyframes posterFlyUpFromRight {
+  0% {
+    opacity: 0;
+    transform:
+      translate(280px, 280px)
+      scale(0.72)
+      rotate(8deg);
+  }
+
+  35% {
+    opacity: 1;
+    transform:
+      translate(145px, 145px)
+      scale(0.84)
+      rotate(5deg);
+  }
+
+  65% {
+    opacity: 1;
+    transform:
+      translate(45px, 45px)
+      scale(0.96)
+      rotate(-2deg);
+  }
+
+  82% {
+    opacity: 1;
+    transform:
+      translate(-8px, -8px)
+      scale(1.03)
+      rotate(1deg);
+  }
+
+  92% {
+    opacity: 1;
+    transform:
+      translate(4px, 4px)
+      scale(0.99)
+      rotate(-0.5deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform:
+      translate(0, 0)
+      scale(1)
+      rotate(0deg);
+  }
+}
+
+/* -----------------------------------------------------
+   POSTER ENTRANCE
+----------------------------------------------------- */
+
+.animate-poster-fly-in {
+  animation:
+    posterFlyUpFromRight
+    0.65s
+    cubic-bezier(0.22, 1, 0.36, 1)
+    both;
+
+  will-change:
+    transform,
+    opacity;
+
+  transform-origin: center center;
+}
+
+/* -----------------------------------------------------
+   POSTER GLOW
+----------------------------------------------------- */
+
+@keyframes posterGlow {
+  0% {
+    opacity: 0;
+    transform: scale(0.75);
+  }
+
+  45% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+
+  100% {
+    opacity: 0.25;
+    transform: scale(1);
+  }
+}
+
+.poster-glow {
+  animation:
+    posterGlow
+    0.75s
+    ease-out
+    both;
+}
+
+/* -----------------------------------------------------
+   SHINE SWEEP
+----------------------------------------------------- */
+
+@keyframes posterShine {
+  0% {
+    transform: translateX(-130%) skewX(-20deg);
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 0;
+  }
+
+  30% {
+    opacity: 0.7;
+  }
+
+  55% {
+    opacity: 0.35;
+  }
+
+  75% {
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateX(130%) skewX(-20deg);
+    opacity: 0;
+  }
+}
+
+.poster-shine {
+  width: 45%;
+  height: 140%;
+  top: -20%;
+  left: 0;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+
+  transform: translateX(-130%) skewX(-20deg);
+
+  animation:
+    posterShine
+    0.9s
+    ease-out
+    0.35s
+    both;
+}
+
+/* -----------------------------------------------------
+   POSTER HOVER
+----------------------------------------------------- */
+
+.poster-hover {
+  transition:
+    transform 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.poster-hover:hover {
+  transform:
+    translateY(-5px)
+    scale(1.015);
+
+  box-shadow:
+    0 25px 50px rgba(0, 0, 0, 0.55);
+}
+
+/* -----------------------------------------------------
+   IMAGE SMOOTHNESS
+----------------------------------------------------- */
+
+.poster-image {
+  transition:
+    transform 0.5s ease,
+    filter 0.5s ease;
+}
+
+.poster-hover:hover .poster-image {
+  transform: scale(1.025);
+}
+
+/* -----------------------------------------------------
+   3D PERSPECTIVE
+----------------------------------------------------- */
+
+.poster-animation-wrapper {
+  perspective: 1000px;
+}
+
+/* -----------------------------------------------------
+   REDUCE MOTION ACCESSIBILITY
+----------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-poster-fly-in,
+  .poster-glow,
+  .poster-shine {
+    animation: none;
+  }
+
+  .poster-hover:hover {
+    transform: none;
+  }
+}

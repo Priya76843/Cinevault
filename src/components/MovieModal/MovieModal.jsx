@@ -21,7 +21,6 @@ const MovieModal = ({
   onWatchlist,
   isInWatchlist = false,
 }) => {
-
   const movieId =
     movie?.id ||
     movie?.imdbID;
@@ -31,12 +30,10 @@ const MovieModal = ({
   // =====================================================
 
   useEffect(() => {
-    document.body.style.overflow =
-      'hidden';
+    document.body.style.overflow = 'hidden';
 
     return () => {
-      document.body.style.overflow =
-        'unset';
+      document.body.style.overflow = 'unset';
     };
   }, []);
 
@@ -45,13 +42,8 @@ const MovieModal = ({
   // =====================================================
 
   useEffect(() => {
-
-    const handleKeyDown = (
-      event
-    ) => {
-      if (
-        event.key === 'Escape'
-      ) {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
         onClose();
       }
     };
@@ -67,7 +59,6 @@ const MovieModal = ({
         handleKeyDown
       );
     };
-
   }, [onClose]);
 
   if (!movie) return null;
@@ -79,53 +70,42 @@ const MovieModal = ({
   const isComparing =
     compareList.some(
       (m) =>
-        (m.id ||
-          m.imdbID) ===
-        movieId
+        (m.id || m.imdbID) === movieId
     );
 
   // =====================================================
   // TRAILER
   // =====================================================
 
-  const handleWatchTrailer =
-    () => {
+  const handleWatchTrailer = () => {
+    const query = encodeURIComponent(
+      `${movie.title} trailer`
+    );
 
-      const query =
-        encodeURIComponent(
-          `${movie.title} trailer`
-        );
-
-      window.open(
-        `https://www.youtube.com/results?search_query=${query}`,
-        '_blank'
-      );
-    };
+    window.open(
+      `https://www.youtube.com/results?search_query=${query}`,
+      '_blank'
+    );
+  };
 
   // =====================================================
   // WATCHLIST
-  // SAME APP STATE AS HEART
   // =====================================================
 
-  const handleToggleWatchlist =
-    () => {
-
-      if (onWatchlist) {
-        onWatchlist(movie);
-      }
-
-    };
+  const handleToggleWatchlist = () => {
+    if (onWatchlist) {
+      onWatchlist(movie);
+    }
+  };
 
   // =====================================================
   // COMPARE
   // =====================================================
 
   const handleCompare = () => {
-
     if (onCompare) {
       onCompare(movie);
     }
-
   };
 
   return (
@@ -146,9 +126,9 @@ const MovieModal = ({
       onClick={onClose}
     >
 
-      {/* ==============================================
+      {/* =================================================
           CLOSE BUTTON
-      ============================================== */}
+      ================================================= */}
 
       <button
         onClick={onClose}
@@ -186,6 +166,7 @@ const MovieModal = ({
             x2="6"
             y2="18"
           />
+
           <line
             x1="6"
             y1="6"
@@ -195,9 +176,9 @@ const MovieModal = ({
         </svg>
       </button>
 
-      {/* ==============================================
+      {/* =================================================
           MODAL
-      ============================================== */}
+      ================================================= */}
 
       <div
         className="
@@ -217,69 +198,121 @@ const MovieModal = ({
           md:p-8
           animate-modal-content
         "
-        onClick={(e) =>
-          e.stopPropagation()
-        }
+        onClick={(e) => e.stopPropagation()}
       >
 
-        <div className="
-          flex
-          flex-col
-          md:flex-row
-          gap-6
-          md:gap-8
-        ">
-
-          {/* ==========================================
-              LEFT COLUMN
-          ========================================== */}
-
-          <div className="
-            w-full
-            md:w-64
-            flex-shrink-0
+        <div
+          className="
             flex
             flex-col
-            gap-3
-          ">
+            md:flex-row
+            gap-6
+            md:gap-8
+          "
+        >
 
-            {/* POSTER */}
+          {/* =================================================
+              LEFT COLUMN
+          ================================================= */}
 
-            <div className="
+          <div
+            className="
               w-full
-              overflow-hidden
-              rounded-lg
-              shadow-md
-              aspect-[2/3]
-              bg-neutral-900
-              border
-              border-white/5
-            ">
+              md:w-64
+              flex-shrink-0
+              flex
+              flex-col
+              gap-3
+            "
+          >
 
-              <img
-                src={
-                  movie.poster ||
-                  movie.posterUrl
-                }
-                alt={
-                  movie.title
-                }
+            {/* =================================================
+                ADVANCED POSTER
+            ================================================= */}
+
+            <div
+              className="
+                poster-animation-wrapper
+                relative
+                w-full
+                aspect-[2/3]
+              "
+            >
+
+              {/* YELLOW GLOW */}
+
+              <div
                 className="
-                  w-full
-                  h-full
-                  object-cover
+                  absolute
+                  inset-[-12px]
+                  rounded-2xl
+                  bg-[#f3cb15]/20
+                  blur-2xl
+                  poster-glow
+                  pointer-events-none
                 "
               />
 
+              {/* POSTER */}
+
+              <div
+                className="
+                  relative
+                  w-full
+                  h-full
+                  overflow-hidden
+                  rounded-lg
+                  shadow-2xl
+                  bg-neutral-900
+                  border
+                  border-white/10
+                  animate-poster-fly-in
+                  poster-hover
+                "
+              >
+
+                <img
+                  src={
+                    movie.poster ||
+                    movie.posterUrl
+                  }
+                  alt={movie.title}
+                  className="
+                    w-full
+                    h-full
+                    object-cover
+                    poster-image
+                  "
+                  onError={(e) => {
+                    e.currentTarget.src =
+                      'https://via.placeholder.com/300x450?text=No+Poster';
+                  }}
+                />
+
+                {/* =================================================
+                    SHINE EFFECT
+                ================================================= */}
+
+                <div
+                  className="
+                    absolute
+                    inset-0
+                    pointer-events-none
+                    poster-shine
+                  "
+                />
+
+              </div>
+
             </div>
 
-            {/* TRAILER */}
+            {/* =================================================
+                WATCH TRAILER
+            ================================================= */}
 
             <button
               type="button"
-              onClick={
-                handleWatchTrailer
-              }
+              onClick={handleWatchTrailer}
               className="
                 w-full
                 mt-2
@@ -315,13 +348,13 @@ const MovieModal = ({
 
             </button>
 
-            {/* WATCHLIST */}
+            {/* =================================================
+                WATCHLIST
+            ================================================= */}
 
             <button
               type="button"
-              onClick={
-                handleToggleWatchlist
-              }
+              onClick={handleToggleWatchlist}
               className={`
                 w-full
                 py-3
@@ -369,13 +402,13 @@ const MovieModal = ({
 
             </button>
 
-            {/* COMPARE */}
+            {/* =================================================
+                COMPARE
+            ================================================= */}
 
             <button
               type="button"
-              onClick={
-                handleCompare
-              }
+              onClick={handleCompare}
               className={`
                 w-full
                 py-3
@@ -421,44 +454,50 @@ const MovieModal = ({
 
           </div>
 
-          {/* ==========================================
+          {/* =================================================
               RIGHT COLUMN
-          ========================================== */}
+          ================================================= */}
 
-          <div className="
-            flex-1
-            flex
-            flex-col
-            pt-1
-          ">
+          <div
+            className="
+              flex-1
+              flex
+              flex-col
+              pt-1
+            "
+          >
 
             {/* TITLE */}
 
-            <h1 className="
-              text-3xl
-              md:text-4xl
-              font-extrabold
-              tracking-tight
-              uppercase
-              m-0
-              leading-none
-            ">
+            <h1
+              className="
+                text-3xl
+                md:text-4xl
+                font-extrabold
+                tracking-tight
+                uppercase
+                m-0
+                leading-none
+              "
+            >
               {movie.title}
             </h1>
 
             {/* META */}
 
-            <div className="
-              flex
-              items-center
-              flex-wrap
-              gap-x-3
-              gap-y-2
-              text-sm
-              text-gray-400
-              font-medium
-              mt-4
-            ">
+            <div
+              className="
+                flex
+                items-center
+                flex-wrap
+                gap-x-3
+                gap-y-2
+                text-sm
+                text-gray-400
+                font-medium
+                mt-4
+              "
+            >
 
               <span>
                 {movie.year}
@@ -468,15 +507,17 @@ const MovieModal = ({
                 |
               </span>
 
-              <span className="
-                border
-                border-gray-600
-                px-1.5
-                py-0.5
-                rounded
-                text-xs
-                tracking-wider
-              ">
+              <span
+                className="
+                  border
+                  border-gray-600
+                  px-1.5
+                  py-0.5
+                  rounded
+                  text-xs
+                  tracking-wider
+                "
+              >
                 {movie.ageRating ||
                   movie.certification ||
                   'PG-13'}
@@ -495,13 +536,15 @@ const MovieModal = ({
                 |
               </span>
 
-              <span className="
-                flex
-                items-center
-                gap-1.5
-                text-[#f3cb15]
-                font-bold
-              ">
+              <span
+                className="
+                  flex
+                  items-center
+                  gap-1.5
+                  text-[#f3cb15]
+                  font-bold
+                "
+              >
 
                 <svg
                   width="14"
@@ -520,16 +563,17 @@ const MovieModal = ({
 
             {/* GENRES */}
 
-            <div className="
-              flex
-              flex-wrap
-              gap-2
-              mt-4
-            ">
+            <div
+              className="
+                flex
+                flex-wrap
+                gap-2
+                mt-4
+              "
+            >
 
               {movie.genres?.map(
                 (genre, idx) => (
-
                   <span
                     key={idx}
                     className="
@@ -544,7 +588,6 @@ const MovieModal = ({
                   >
                     {genre}
                   </span>
-
                 )
               )}
 
@@ -552,12 +595,14 @@ const MovieModal = ({
 
             {/* PLOT */}
 
-            <p className="
-              text-gray-300
-              text-[14px]
-              leading-relaxed
-              mt-5
-            ">
+            <p
+              className="
+                text-gray-300
+                text-[14px]
+                leading-relaxed
+                mt-5
+              "
+            >
               {movie.plot ||
                 movie.overview}
             </p>
@@ -566,22 +611,26 @@ const MovieModal = ({
 
             <div className="mt-6">
 
-              <h3 className="
-                text-[15px]
-                font-bold
-                text-white
-                mb-4
-              ">
+              <h3
+                className="
+                  text-[15px]
+                  font-bold
+                  text-white
+                  mb-4
+                "
+              >
                 Cast & Crew
               </h3>
 
-              <div className="
-                flex
-                flex-wrap
-                gap-x-8
-                gap-y-4
-                mb-5
-              ">
+              <div
+                className="
+                  flex
+                  flex-wrap
+                  gap-x-8
+                  gap-y-4
+                  mb-5
+                "
+              >
 
                 {movie.cast
                   ?.slice(0, 3)
@@ -590,7 +639,6 @@ const MovieModal = ({
                       actor,
                       index
                     ) => (
-
                       <div
                         key={index}
                         className="
@@ -600,43 +648,51 @@ const MovieModal = ({
                         "
                       >
 
-                        <div className="
-                          w-11
-                          h-11
-                          rounded-full
-                          bg-[#2a2a2a]
-                          text-gray-300
-                          font-bold
-                          flex
-                          items-center
-                          justify-center
-                          text-sm
-                          border
-                          border-white/5
-                          flex-shrink-0
-                        ">
+                        <div
+                          className="
+                            w-11
+                            h-11
+                            rounded-full
+                            bg-[#2a2a2a]
+                            text-gray-300
+                            font-bold
+                            flex
+                            items-center
+                            justify-center
+                            text-sm
+                            border
+                            border-white/5
+                            flex-shrink-0
+                          "
+                        >
                           {getInitials(
                             actor.name
                           )}
                         </div>
 
-                        <div className="
-                          flex
-                          flex-col
-                        ">
+                        <div
+                          className="
+                            flex
+                            flex-col
+                          "
+                        >
 
-                          <span className="
-                            text-[14px]
-                            font-semibold
-                            text-white
-                          ">
+                          <span
+                            className="
+                              text-[14px]
+                              font-semibold
+                              text-white
+                            "
+                          >
                             {actor.name}
                           </span>
 
-                          <span className="
-                            text-[12px]
-                            text-gray-400
-                          ">
+                          <span
+                            className="
+                              text-[12px]
+                              text-gray-400
+                            "
+                          >
                             {actor.role ||
                               'Actor'}
                           </span>
@@ -644,7 +700,6 @@ const MovieModal = ({
                         </div>
 
                       </div>
-
                     )
                   )}
 
@@ -652,19 +707,24 @@ const MovieModal = ({
 
               {/* DIRECTOR */}
 
-              <div className="
-                text-[14px]
-                text-gray-300
-              ">
+              <div
+                className="
+                  text-[14px]
+                  text-gray-300
+                "
+              >
                 Director:{' '}
 
-                <span className="
-                  text-[#f3cb15]
-                  font-semibold
-                ">
+                <span
+                  className="
+                    text-[#f3cb15]
+                    font-semibold
+                  "
+                >
                   {movie.director ||
                     'Unknown'}
                 </span>
+
               </div>
 
             </div>
@@ -672,30 +732,34 @@ const MovieModal = ({
             {/* MORE LIKE THIS */}
 
             {movie.similarMovies &&
-              movie.similarMovies.length >
-                0 && (
+              movie.similarMovies.length > 0 && (
+                <div
+                  className="
+                    mt-8
+                    border-t
+                    border-white/10
+                    pt-6
+                  "
+                >
 
-                <div className="
-                  mt-8
-                  border-t
-                  border-white/10
-                  pt-6
-                ">
-
-                  <h3 className="
-                    text-[15px]
-                    font-bold
-                    text-white
-                    mb-4
-                  ">
+                  <h3
+                    className="
+                      text-[15px]
+                      font-bold
+                      text-white
+                      mb-4
+                    "
+                  >
                     More like this
                   </h3>
 
-                  <div className="
-                    grid
-                    grid-cols-4
-                    gap-3
-                  ">
+                  <div
+                    className="
+                      grid
+                      grid-cols-4
+                      gap-3
+                    "
+                  >
 
                     {movie.similarMovies
                       .slice(0, 4)
@@ -704,7 +768,6 @@ const MovieModal = ({
                           simMovie,
                           idx
                         ) => (
-
                           <div
                             key={idx}
                             className="
@@ -734,14 +797,12 @@ const MovieModal = ({
                             />
 
                           </div>
-
                         )
                       )}
 
                   </div>
 
                 </div>
-
               )}
 
           </div>
