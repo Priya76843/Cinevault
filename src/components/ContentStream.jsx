@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import MovieSection from './MovieSection/MovieSection';
+import RecommendationSection from './RecommendationSection/RecommendationSection';
 
 const ContentStream = ({
   trending = [],
   popular = [],
   topRated = [],
   comingSoon = [],
+  favorites = [],
   onMovieClick,
   onCompare,
   compareList = [],
+  onFavorite,
 }) => {
   const [selectedGenre, setSelectedGenre] = useState(null);
 
@@ -23,66 +26,124 @@ const ContentStream = ({
     'Thriller',
   ];
 
-  // Filter movies by selected genre
+  // ==========================================
+  // FILTER MOVIES BY SELECTED GENRE
+  // ==========================================
   const filterByGenre = (movieList) => {
-    if (!selectedGenre || selectedGenre === 'All') return movieList;
+    if (!selectedGenre || selectedGenre === 'All') {
+      return movieList;
+    }
 
     return movieList.filter((movie) => {
-      if (movie.genres && Array.isArray(movie.genres)) {
+      if (
+        movie.genres &&
+        Array.isArray(movie.genres)
+      ) {
         return movie.genres.some(
-          (g) => g.toLowerCase() === selectedGenre.toLowerCase()
+          (g) =>
+            g.toLowerCase() ===
+            selectedGenre.toLowerCase()
         );
       }
+
       if (movie.genre) {
-        return movie.genre.toLowerCase().includes(selectedGenre.toLowerCase());
+        return movie.genre
+          .toLowerCase()
+          .includes(
+            selectedGenre.toLowerCase()
+          );
       }
+
       return false;
     });
   };
 
-  // Helper function to handle genre click AND auto-scroll up to movies
+  // ==========================================
+  // HANDLE GENRE CLICK
+  // ==========================================
   const handleGenreClick = (genre) => {
-    const isSameGenre = selectedGenre === genre;
-    const newGenre = isSameGenre ? null : genre;
+    const isSameGenre =
+      selectedGenre === genre;
+
+    const newGenre =
+      isSameGenre ? null : genre;
 
     setSelectedGenre(newGenre);
 
-    // Auto-scroll up to the top of the movie results section
     if (newGenre) {
-      const targetSection = document.getElementById('trending');
+      const targetSection =
+        document.getElementById('trending');
+
       if (targetSection) {
-        targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        targetSection.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
       }
     }
   };
 
-  const filteredTrending = filterByGenre(trending);
-  const filteredPopular = filterByGenre(popular);
-  const filteredTopRated = filterByGenre(topRated);
+  const filteredTrending =
+    filterByGenre(trending);
+
+  const filteredPopular =
+    filterByGenre(popular);
+
+  const filteredTopRated =
+    filterByGenre(topRated);
+
+  // ==========================================
+  // ALL AVAILABLE MOVIES FOR PERSONALIZATION
+  // ==========================================
+  const allMovies = [
+    ...trending,
+    ...popular,
+    ...topRated,
+    ...comingSoon,
+  ];
 
   return (
     <section className="bg-[#080808] px-20 py-10 max-w-[1440px] mx-auto text-white">
-      
-      {/* Active Genre Filter Notification */}
+
+      {/* ======================================
+          ACTIVE GENRE FILTER
+      ======================================= */}
       {selectedGenre && (
         <div className="mb-6 p-3.5 bg-neutral-900 border border-[#FFB800]/40 rounded-xl flex items-center justify-between shadow-lg">
+
           <div className="flex items-center gap-2">
-            <span className="text-base">🎬</span>
-            <span className="text-sm text-neutral-300">
-              Showing movies matching: <strong className="text-[#FFB800] text-base ml-1">{selectedGenre}</strong>
+
+            <span className="text-base">
+              🎬
             </span>
+
+            <span className="text-sm text-neutral-300">
+              Showing movies matching:
+
+              <strong className="text-[#FFB800] text-base ml-1">
+                {selectedGenre}
+              </strong>
+            </span>
+
           </div>
+
           <button
-            onClick={() => setSelectedGenre(null)}
+            onClick={() =>
+              setSelectedGenre(null)
+            }
             className="text-xs bg-[#FFB800] text-black font-bold px-3.5 py-1.5 rounded-lg hover:bg-yellow-400 transition-colors cursor-pointer"
           >
             Show All Movies ✕
           </button>
+
         </div>
       )}
 
-      {/* Trending Now */}
+      {/* ======================================
+          TRENDING NOW
+      ======================================= */}
       <div id="trending">
+
         <MovieSection
           title="Trending Now"
           movies={filteredTrending}
@@ -90,10 +151,14 @@ const ContentStream = ({
           onMovieClick={onMovieClick}
           onCompare={onCompare}
           compareList={compareList}
+          onFavorite={onFavorite}
         />
+
       </div>
 
-      {/* Popular Movies */}
+      {/* ======================================
+          POPULAR MOVIES
+      ======================================= */}
       <MovieSection
         title="Popular Movies"
         movies={filteredPopular}
@@ -101,10 +166,14 @@ const ContentStream = ({
         onMovieClick={onMovieClick}
         onCompare={onCompare}
         compareList={compareList}
+        onFavorite={onFavorite}
       />
 
-      {/* Top Rated Masterworks */}
+      {/* ======================================
+          TOP RATED
+      ======================================= */}
       <div id="top-rated">
+
         <MovieSection
           title="Top Rated Masterworks"
           movies={filteredTopRated}
@@ -112,61 +181,125 @@ const ContentStream = ({
           onMovieClick={onMovieClick}
           onCompare={onCompare}
           compareList={compareList}
+          onFavorite={onFavorite}
         />
+
       </div>
 
-      {/* Coming Soon Section */}
+      {/* ======================================
+          ✨ PERSONALIZED FOR YOU
+      ======================================= */}
+      <RecommendationSection
+        favorites={favorites}
+        movies={allMovies}
+        onMovieClick={onMovieClick}
+        onCompare={onCompare}
+        compareList={compareList}
+      />
+
+      {/* ======================================
+          COMING SOON
+      ======================================= */}
       <div className="mb-10">
-        <h2 className="text-2xl font-bold text-white mb-4">Coming Soon</h2>
+
+        <h2 className="text-2xl font-bold text-white mb-4">
+          Coming Soon
+        </h2>
+
         <div className="grid grid-cols-3 gap-5">
-          {comingSoon.slice(0, 3).map((movie) => (
-            <div
-              key={movie.id || movie.imdbID}
-              onClick={() => onMovieClick?.(movie)}
-              className="flex gap-4 bg-neutral-950 border border-neutral-900 rounded-xl p-4 cursor-pointer hover:border-[#FFB800] hover:bg-neutral-900 transition-all"
-            >
-              <img
-                src={movie.poster}
-                alt={movie.title}
-                className="w-24 h-32 object-cover rounded-lg flex-shrink-0"
-              />
-              <div className="flex flex-col gap-2 justify-center overflow-hidden">
-                <span className="text-[10px] text-[#FFB800] font-bold tracking-wider uppercase">
-                  RELEASING {movie.releaseDate || 'SOON'}
-                </span>
-                <h3 className="text-lg font-bold text-white m-0 leading-tight truncate">
-                  {movie.title}
-                </h3>
-                <p className="text-[13px] text-neutral-400 leading-relaxed m-0 line-clamp-2">
-                  {movie.plot || movie.description || 'Full plot details coming soon...'}
-                </p>
+
+          {comingSoon
+            .slice(0, 3)
+            .map((movie) => (
+
+              <div
+                key={
+                  movie.id ||
+                  movie.imdbID
+                }
+                onClick={() =>
+                  onMovieClick?.(movie)
+                }
+                className="flex gap-4 bg-neutral-950 border border-neutral-900 rounded-xl p-4 cursor-pointer hover:border-[#FFB800] hover:bg-neutral-900 transition-all"
+              >
+
+                <img
+                  src={movie.poster}
+                  alt={movie.title}
+                  className="w-24 h-32 object-cover rounded-lg flex-shrink-0"
+                  onError={(e) => {
+                    e.target.src =
+                      'https://via.placeholder.com/300x450?text=No+Poster';
+                  }}
+                />
+
+                <div className="flex flex-col gap-2 justify-center overflow-hidden">
+
+                  <span className="text-[10px] text-[#FFB800] font-bold tracking-wider uppercase">
+                    RELEASING{' '}
+                    {movie.releaseDate ||
+                      'SOON'}
+                  </span>
+
+                  <h3 className="text-lg font-bold text-white m-0 leading-tight truncate">
+                    {movie.title}
+                  </h3>
+
+                  <p className="text-[13px] text-neutral-400 leading-relaxed m-0 line-clamp-2">
+                    {movie.plot ||
+                      movie.description ||
+                      'Full plot details coming soon...'}
+                  </p>
+
+                </div>
+
               </div>
-            </div>
-          ))}
+
+            ))}
+
         </div>
       </div>
 
-      {/* Browse by Genre Chips */}
-      <div id="genres" className="mb-10">
+      {/* ======================================
+          BROWSE BY GENRE
+      ======================================= */}
+      <div
+        id="genres"
+        className="mb-10"
+      >
+
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-white m-0">Browse by Genre</h2>
+
+          <h2 className="text-xl font-bold text-white m-0">
+            Browse by Genre
+          </h2>
+
           {selectedGenre && (
             <button
-              onClick={() => setSelectedGenre(null)}
+              onClick={() =>
+                setSelectedGenre(null)
+              }
               className="text-xs text-neutral-400 hover:text-[#FFB800] transition-colors cursor-pointer"
             >
               Clear Filter ✕
             </button>
           )}
+
         </div>
-        
+
         <div className="flex flex-wrap gap-2.5">
+
           {genres.map((genre) => {
-            const isActive = selectedGenre === genre;
+
+            const isActive =
+              selectedGenre === genre;
+
             return (
               <button
                 key={genre}
-                onClick={() => handleGenreClick(genre)}
+                onClick={() =>
+                  handleGenreClick(genre)
+                }
                 className={`px-5 py-2 rounded-full text-[13px] font-medium border transition-all cursor-pointer ${
                   isActive
                     ? 'bg-[#FFB800] text-black border-[#FFB800] font-bold shadow-md scale-105'
@@ -176,8 +309,11 @@ const ContentStream = ({
                 {genre}
               </button>
             );
+
           })}
+
         </div>
+
       </div>
 
     </section>

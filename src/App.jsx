@@ -17,7 +17,8 @@ import {
 } from './services/omdbApi';
 
 import { movieIDs } from './data/movieids';
-import { mockSearchResults } from './data/mockMovies';
+
+const FAVORITES_KEY = 'cinevault_favorites';
 
 function App() {
   const [view, setView] = useState('loading');
@@ -33,8 +34,31 @@ function App() {
 
   // WATCHLIST STATE
   const [watchlist, setWatchlist] = useState(() => {
-    const savedWatchlist = localStorage.getItem('cinevault-watchlist');
-    return savedWatchlist ? JSON.parse(savedWatchlist) : [];
+    try {
+      const savedWatchlist =
+        localStorage.getItem('cinevault-watchlist');
+
+      return savedWatchlist
+        ? JSON.parse(savedWatchlist)
+        : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // FAVORITES STATE
+  // ❤️ This is used for personalized recommendations
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const savedFavorites =
+        localStorage.getItem(FAVORITES_KEY);
+
+      return savedFavorites
+        ? JSON.parse(savedFavorites)
+        : [];
+    } catch {
+      return [];
+    }
   });
 
   // HOMEPAGE STATES
@@ -44,7 +68,7 @@ function App() {
   const [topRatedMovies, setTopRatedMovies] = useState([]);
   const [comingSoonMovies, setComingSoonMovies] = useState([]);
 
-  // Save watchlist whenever it changes
+  // SAVE WATCHLIST TO LOCAL STORAGE
   useEffect(() => {
     localStorage.setItem(
       'cinevault-watchlist',
@@ -52,24 +76,86 @@ function App() {
     );
   }, [watchlist]);
 
-  // Toggle Dark/Light Mode
+  // SAVE FAVORITES TO LOCAL STORAGE
+  useEffect(() => {
+    localStorage.setItem(
+      FAVORITES_KEY,
+      JSON.stringify(favorites)
+    );
+  }, [favorites]);
+
+  // KEEP FAVORITES STATE IN SYNC WITH MOVIECARD
+  useEffect(() => {
+    const syncFavorites = () => {
+      try {
+        const savedFavorites =
+          localStorage.getItem(FAVORITES_KEY);
+
+        setFavorites(
+          savedFavorites
+            ? JSON.parse(savedFavorites)
+            : []
+        );
+      } catch {
+        setFavorites([]);
+      }
+    };
+
+    window.addEventListener(
+      'cinevault-favorites-updated',
+      syncFavorites
+    );
+
+    return () => {
+      window.removeEventListener(
+        'cinevault-favorites-updated',
+        syncFavorites
+      );
+    };
+  }, []);
+
+  // HANDLE FAVORITE
+  // ❤️ This is the main personalization signal
+  const handleFavorite = (movie) => {
+    const movieId = movie.id || movie.imdbID;
+
+    setFavorites((prev) => {
+      const exists = prev.some(
+        (item) =>
+          (item.id || item.imdbID) === movieId
+      );
+
+      if (exists) {
+        return prev.filter(
+          (item) =>
+            (item.id || item.imdbID) !== movieId
+        );
+      }
+
+      return [...prev, movie];
+    });
+  };
+
+  // TOGGLE DARK/LIGHT MODE
   const toggleTheme = () => {
     setIsLightMode((prev) => !prev);
     document.body.classList.toggle('light-mode');
   };
 
-  // HANDLE WATCHLIST
+  // HANDLE WATCHLIST ADD/REMOVE
   const handleWatchlist = (movie) => {
     const movieId = movie.id || movie.imdbID;
 
     setWatchlist((prev) => {
       const exists = prev.some(
-        (m) => (m.id || m.imdbID) === movieId
+        (m) =>
+          (m.id || m.imdbID) === movieId
       );
 
       if (exists) {
         return prev.filter(
-          (m) => (m.id || m.imdbID) !== movieId
+          (m) =>
+            (m.id || m.imdbID) !== movieId
         );
       }
 
@@ -79,10 +165,13 @@ function App() {
 
   // CHECK WHETHER MOVIE IS IN WATCHLIST
   const isInWatchlist = (movie) => {
+    if (!movie) return false;
+
     const movieId = movie.id || movie.imdbID;
 
     return watchlist.some(
-      (m) => (m.id || m.imdbID) === movieId
+      (m) =>
+        (m.id || m.imdbID) === movieId
     );
   };
 
@@ -90,107 +179,113 @@ function App() {
   const handleCompare = (movie) => {
     const movieId = movie.id || movie.imdbID;
 
-    // If already in list -> remove it
+    // Remove if already selected
     if (
       compareList.some(
-        (m) => (m.id || m.imdbID) === movieId
+        (m) =>
+          (m.id || m.imdbID) === movieId
       )
     ) {
       setCompareList(
         compareList.filter(
-          (m) => (m.id || m.imdbID) !== movieId
+          (m) =>
+            (m.id || m.imdbID) !== movieId
         )
       );
+
       return;
     }
 
-    // Add to compare list
+    // Maximum 2 movies
     if (compareList.length < 2) {
-      setCompareList([...compareList, movie]);
+      setCompareList([
+        ...compareList,
+        movie,
+      ]);
 
-      // Close detail modal
       setSelectedMovie(null);
     }
   };
 
-  // Load Homepage Data
-  useEffect(() => {
+  // LOAD HOMEPAGE DATA
+  const loadHomeData = async () => {
     let isMounted = true;
 
-    const loadHomeData = async () => {
-      try {
-        const timeoutPromise = new Promise((_, reject) =>
+    try {
+      setView('loading');
+      setErrorMessage('');
+
+      // 5-second timeout
+      const timeoutPromise = new Promise(
+        (_, reject) =>
           setTimeout(
-            () => reject(new Error('API Timeout')),
-            3500
+            () =>
+              reject(
+                new Error(
+                  'Network request timed out. Please check your connection or API key.'
+                )
+              ),
+            5000
           )
+      );
+
+      const fetchData = Promise.all([
+        getMovieDetails(movieIDs.hero),
+        fetchCuratedRow(movieIDs.trending),
+        fetchCuratedRow(movieIDs.popular),
+        fetchCuratedRow(movieIDs.topRated),
+        fetchCuratedRow(movieIDs.comingSoon),
+      ]);
+
+      const [
+        hero,
+        trending,
+        popular,
+        topRated,
+        comingSoon,
+      ] = await Promise.race([
+        fetchData,
+        timeoutPromise,
+      ]);
+
+      if (isMounted) {
+        if (!hero && !trending.length) {
+          throw new Error(
+            'Failed to retrieve movie data from OMDb API.'
+          );
+        }
+
+        setHeroMovie(hero);
+        setTrendingMovies(trending);
+        setPopularMovies(popular);
+        setTopRatedMovies(topRated);
+        setComingSoonMovies(comingSoon);
+
+        setView('home');
+      }
+    } catch (err) {
+      if (isMounted) {
+        console.error(
+          'OMDb Load Error:',
+          err
         );
 
-        const fetchData = Promise.all([
-          getMovieDetails(movieIDs.hero),
-          fetchCuratedRow(movieIDs.trending),
-          fetchCuratedRow(movieIDs.popular),
-          fetchCuratedRow(movieIDs.topRated),
-          fetchCuratedRow(movieIDs.comingSoon),
-        ]);
+        setErrorMessage(
+          err.message ||
+            'Failed to load movie data from OMDb API.'
+        );
 
-        const [
-          hero,
-          trending,
-          popular,
-          topRated,
-          comingSoon,
-        ] = await Promise.race([
-          fetchData,
-          timeoutPromise,
-        ]);
-
-        if (isMounted) {
-          setHeroMovie(hero || mockSearchResults[1]);
-
-          setTrendingMovies(
-            trending.length ? trending : mockSearchResults
-          );
-
-          setPopularMovies(
-            popular.length ? popular : mockSearchResults
-          );
-
-          setTopRatedMovies(
-            topRated.length ? topRated : mockSearchResults
-          );
-
-          setComingSoonMovies(
-            comingSoon.length
-              ? comingSoon
-              : mockSearchResults.slice(0, 3)
-          );
-
-          setView('home');
-        }
-      } catch (err) {
-        if (isMounted) {
-          setHeroMovie(mockSearchResults[1]);
-          setTrendingMovies(mockSearchResults);
-          setPopularMovies(mockSearchResults);
-          setTopRatedMovies(mockSearchResults);
-          setComingSoonMovies(
-            mockSearchResults.slice(0, 3)
-          );
-
-          setView('home');
-        }
+        setView('error');
       }
-    };
+    }
+  };
 
+  // INITIAL LOAD
+  useEffect(() => {
     loadHomeData();
-
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
-  // Search Handler
+  // SEARCH HANDLER
   const handleSearch = async (query) => {
     if (!query?.trim()) return;
 
@@ -199,24 +294,35 @@ function App() {
     setErrorMessage('');
 
     try {
-      const results = await searchMovies(query);
+      const results =
+        await searchMovies(query);
 
-      setSearchResults(
-        results.length ? results : mockSearchResults
-      );
-
+      setSearchResults(results);
       setView('search');
     } catch (err) {
-      setSearchResults(mockSearchResults);
-      setView('search');
+      console.error(
+        'Search Error:',
+        err
+      );
+
+      setErrorMessage(
+        err.message ||
+          'Failed to fetch search results from OMDb API.'
+      );
+
+      setView('error');
     }
   };
 
-  // Open Movie Detail Modal
+  // OPEN MOVIE DETAIL MODAL
   const handleMovieClick = async (movie) => {
-    const movieId = movie.id || movie.imdbID;
+    const movieId =
+      movie.id || movie.imdbID;
 
-    if (movie.plot && movie.director) {
+    if (
+      movie.plot &&
+      movie.director
+    ) {
       setSelectedMovie(movie);
       return;
     }
@@ -224,8 +330,12 @@ function App() {
     setModalLoading(true);
 
     try {
-      const details = await getMovieDetails(movieId);
-      setSelectedMovie(details || movie);
+      const details =
+        await getMovieDetails(movieId);
+
+      setSelectedMovie(
+        details || movie
+      );
     } catch (err) {
       setSelectedMovie(movie);
     } finally {
@@ -241,19 +351,23 @@ function App() {
     setView('home');
     setSearchQuery('');
     setSearchResults([]);
+    setErrorMessage('');
   };
 
+  // LOADING
   if (view === 'loading') {
     return <LoadingState />;
   }
 
+  // ERROR
   if (view === 'error') {
     return (
       <ErrorState
         message={
-          errorMessage || 'Failed to load movie data.'
+          errorMessage ||
+          'Failed to load movie data from OMDb API.'
         }
-        onRetry={() => window.location.reload()}
+        onRetry={loadHomeData}
         onHome={handleBackHome}
       />
     );
@@ -262,6 +376,7 @@ function App() {
   return (
     <div className="bg-[#080808] min-h-screen transition-colors">
 
+      {/* NAVBAR */}
       <Navbar
         onSearch={handleSearch}
         onViewChange={setView}
@@ -283,7 +398,14 @@ function App() {
             popular={popularMovies}
             topRated={topRatedMovies}
             comingSoon={comingSoonMovies}
+
+            // ❤️ Favorites drive personalization
+            favorites={favorites}
+
             onMovieClick={handleMovieClick}
+            onCompare={handleCompare}
+            compareList={compareList}
+            onFavorite={handleFavorite}
           />
         </>
       )}
@@ -312,40 +434,48 @@ function App() {
 
       <Footer />
 
-      {/* Loading Spinner for Modal */}
+      {/* MODAL LOADING */}
       {modalLoading && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60">
+
           <div className="flex items-center gap-3 bg-[#111] px-6 py-4 rounded-xl border border-neutral-800">
+
             <div className="w-5 h-5 border-2 border-[#FFB800] border-t-transparent rounded-full animate-spin" />
 
             <span className="text-sm text-white">
               Loading details...
             </span>
+
           </div>
         </div>
       )}
 
-      {/* Movie Detail Modal */}
-      {selectedMovie && !modalLoading && (
-        <MovieModal
-          movie={selectedMovie}
-          onClose={handleCloseModal}
-          onCompare={handleCompare}
-          compareList={compareList}
-          onWatchlist={handleWatchlist}
-          isInWatchlist={isInWatchlist(selectedMovie)}
-        />
-      )}
+      {/* MOVIE MODAL */}
+      {selectedMovie &&
+        !modalLoading && (
+          <MovieModal
+            movie={selectedMovie}
+            onClose={handleCloseModal}
+            onCompare={handleCompare}
+            compareList={compareList}
+            onWatchlist={handleWatchlist}
+            isInWatchlist={isInWatchlist(
+              selectedMovie
+            )}
+          />
+        )}
 
-      {/* Compare Modal */}
+      {/* COMPARE MODAL */}
       {compareList.length === 2 && (
         <CompareModal
           movies={compareList}
-          onClose={() => setCompareList([])}
+          onClose={() =>
+            setCompareList([])
+          }
         />
       )}
 
-      {/* Compare Notification */}
+      {/* COMPARE NOTIFICATION */}
       {compareList.length === 1 && (
         <div className="fixed bottom-6 right-6 bg-[#FFB800] text-black px-5 py-3 rounded-xl font-bold shadow-2xl z-[150] animate-bounce flex items-center gap-3 border border-yellow-300">
 
@@ -361,13 +491,17 @@ function App() {
           </span>
 
           <button
-            onClick={() => setCompareList([])}
+            onClick={() =>
+              setCompareList([])
+            }
             className="ml-2 text-xs bg-black text-white px-2.5 py-1 rounded hover:bg-neutral-800 cursor-pointer"
           >
             Cancel ✕
           </button>
+
         </div>
       )}
+
     </div>
   );
 }
