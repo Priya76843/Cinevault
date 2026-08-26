@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import MovieSection from '../MovieSection/MovieSection';
 
 const RecommendationSection = ({
@@ -8,34 +8,30 @@ const RecommendationSection = ({
   onCompare,
   compareList = [],
 }) => {
-  const [isVisible, setIsVisible] =
-    useState(false);
-
   // ==========================================
   // ✨ ANIMATION
   // ==========================================
+  const [isVisible, setIsVisible] = useState(
+    favorites.length === 0
+  );
+
   useEffect(() => {
-    if (favorites.length > 0) {
-      setIsVisible(false);
-
-      const timer = setTimeout(() => {
-        setIsVisible(true);
-      }, 100);
-
-      return () => clearTimeout(timer);
+    if (favorites.length === 0) {
+      return undefined;
     }
 
-    setIsVisible(true);
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [favorites]);
 
   // ==========================================
   // 🎯 PERSONALIZATION ENGINE
   // ==========================================
   const recommendations = useMemo(() => {
-    if (
-      !favorites.length ||
-      !movies.length
-    ) {
+    if (!favorites.length || !movies.length) {
       return [];
     }
 
@@ -47,22 +43,16 @@ const RecommendationSection = ({
     favorites.forEach((movie) => {
       let movieGenres = [];
 
-      if (
-        Array.isArray(movie.genres)
-      ) {
+      if (Array.isArray(movie.genres)) {
         movieGenres = movie.genres;
       } else if (movie.genre) {
-        movieGenres =
-          movie.genre
-            .split(',')
-            .map((genre) =>
-              genre.trim()
-            );
+        movieGenres = movie.genre
+          .split(',')
+          .map((genre) => genre.trim());
       }
 
       movieGenres.forEach((genre) => {
-        const normalized =
-          genre.toLowerCase().trim();
+        const normalized = genre.toLowerCase().trim();
 
         if (!normalized) return;
 
@@ -76,8 +66,7 @@ const RecommendationSection = ({
     // ----------------------------------------
     const favoriteIds = new Set(
       favorites.map(
-        (movie) =>
-          movie.id || movie.imdbID
+        (movie) => movie.id || movie.imdbID
       )
     );
 
@@ -96,62 +85,49 @@ const RecommendationSection = ({
     // ----------------------------------------
     // 4. Score each movie
     // ----------------------------------------
-    const scoredMovies =
-      uniqueMovies
-        .filter((movie) => {
-          const id =
-            movie.id || movie.imdbID;
+    const scoredMovies = uniqueMovies
+      .filter((movie) => {
+        const id = movie.id || movie.imdbID;
 
-          // Don't recommend a movie
-          // that the user already liked
-          return !favoriteIds.has(id);
-        })
-        .map((movie) => {
-          let movieGenres = [];
+        // Don't recommend a movie
+        // that the user already liked
+        return !favoriteIds.has(id);
+      })
+      .map((movie) => {
+        let movieGenres = [];
 
-          if (
-            Array.isArray(movie.genres)
-          ) {
-            movieGenres =
-              movie.genres;
-          } else if (movie.genre) {
-            movieGenres =
-              movie.genre
-                .split(',')
-                .map((genre) =>
-                  genre.trim()
-                );
+        if (Array.isArray(movie.genres)) {
+          movieGenres = movie.genres;
+        } else if (movie.genre) {
+          movieGenres = movie.genre
+            .split(',')
+            .map((genre) => genre.trim());
+        }
+
+        let score = 0;
+
+        movieGenres.forEach((genre) => {
+          const normalized = genre
+            .toLowerCase()
+            .trim();
+
+          if (genreScores[normalized]) {
+            score += genreScores[normalized];
           }
-
-          let score = 0;
-
-          movieGenres.forEach(
-            (genre) => {
-              const normalized =
-                genre.toLowerCase().trim();
-
-              if (
-                genreScores[normalized]
-              ) {
-                score +=
-                  genreScores[normalized];
-              }
-            }
-          );
-
-          // Small rating bonus
-          const rating =
-            parseFloat(movie.rating);
-
-          if (!isNaN(rating)) {
-            score += rating / 10;
-          }
-
-          return {
-            ...movie,
-            recommendationScore: score,
-          };
         });
+
+        // Small rating bonus
+        const rating = parseFloat(movie.rating);
+
+        if (!isNaN(rating)) {
+          score += rating / 10;
+        }
+
+        return {
+          ...movie,
+          recommendationScore: score,
+        };
+      });
 
     // ----------------------------------------
     // 5. Sort highest match first
@@ -175,7 +151,6 @@ const RecommendationSection = ({
   if (favorites.length === 0) {
     return (
       <section className="mb-10">
-
         <div className="relative overflow-hidden rounded-2xl bg-neutral-950 border border-neutral-900 p-7">
 
           {/* Animated glow */}
@@ -188,7 +163,6 @@ const RecommendationSection = ({
             </div>
 
             <div>
-
               <h2 className="text-xl font-bold text-white">
                 ✨ Personalized for you
               </h2>
@@ -197,13 +171,10 @@ const RecommendationSection = ({
                 Favorite movies using the ❤️
                 button and we'll learn your taste.
               </p>
-
             </div>
 
           </div>
-
         </div>
-
       </section>
     );
   }
@@ -214,7 +185,6 @@ const RecommendationSection = ({
   if (recommendations.length === 0) {
     return (
       <section className="mb-10">
-
         <div
           className={`relative overflow-hidden rounded-2xl bg-neutral-950 border border-[#FFB800]/20 p-7 transition-all duration-700 ${
             isVisible
@@ -223,6 +193,7 @@ const RecommendationSection = ({
           }`}
         >
 
+          {/* Animated glow */}
           <div className="absolute -right-16 -top-16 w-48 h-48 bg-[#FFB800]/10 rounded-full blur-3xl animate-pulse" />
 
           <div className="relative">
@@ -246,9 +217,7 @@ const RecommendationSection = ({
             </p>
 
           </div>
-
         </div>
-
       </section>
     );
   }
@@ -259,7 +228,9 @@ const RecommendationSection = ({
   return (
     <section className="mb-10">
 
-      {/* HEADER */}
+      {/* ======================================
+          HEADER
+      ======================================= */}
       <div
         className={`relative mb-5 transition-all duration-700 ${
           isVisible
@@ -306,10 +277,11 @@ const RecommendationSection = ({
           </div>
 
         </div>
-
       </div>
 
-      {/* MOVIES */}
+      {/* ======================================
+          MOVIES
+      ======================================= */}
       <div
         className={`transition-all duration-1000 ${
           isVisible

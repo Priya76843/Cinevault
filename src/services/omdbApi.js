@@ -173,8 +173,12 @@ export const searchMovies = async (query) => {
       error
     );
 
+    // Preserve the original error
     throw new Error(
-      'Failed to fetch search results from OMDb.'
+      'Failed to fetch search results from OMDb.',
+      {
+        cause: error,
+      }
     );
   }
 };

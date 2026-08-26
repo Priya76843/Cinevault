@@ -1,4 +1,4 @@
-import React from 'react';
+//import React from 'react';
 
 const Footer = () => {
   const exploreLinks = ['Trending', 'Top Lists', 'Awards', 'Upcoming'];

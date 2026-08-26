@@ -1,4 +1,4 @@
-import React from 'react';
+//import React from 'react';
 
 const Hero = ({ movie, onMovieClick }) => {
   // High-res horizontal landscape backdrop for Interstellar

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 const FAVORITES_KEY = 'cinevault_favorites';
 
@@ -9,27 +9,23 @@ const MovieCard = ({
 }) => {
   const movieId = movie.id || movie.imdbID;
 
-  const [isFavorite, setIsFavorite] = useState(false);
-
   // ==========================================
-  // CHECK FAVORITE STATUS
+  // CHECK INITIAL FAVORITE STATUS
   // ==========================================
-  useEffect(() => {
+  const [isFavorite, setIsFavorite] = useState(() => {
     try {
       const saved = JSON.parse(
         localStorage.getItem(FAVORITES_KEY) || '[]'
       );
 
-      setIsFavorite(
-        saved.some(
-          (item) =>
-            (item.id || item.imdbID) === movieId
-        )
+      return saved.some(
+        (item) =>
+          (item.id || item.imdbID) === movieId
       );
     } catch {
-      setIsFavorite(false);
+      return false;
     }
-  }, [movieId]);
+  });
 
   // ==========================================
   // ❤️ FAVORITE BUTTON
