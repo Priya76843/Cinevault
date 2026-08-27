@@ -1,45 +1,103 @@
 const API_KEY =
-  import.meta.env.VITE_OMDB_API_KEY || 'd05bd4cd';
+  import.meta.env.VITE_OMDB_API_KEY;
 
 const BASE_URL = 'https://www.omdbapi.com/';
+
+// ==================================================
+// DEV NETWORK MODE
+// ==================================================
+//
+// Normal:
+//   Uses 24-hour cache.
+//
+// Force Network:
+//   Bypasses cache and makes real OMDb requests.
+//
+// Enable in browser console:
+//
+// localStorage.setItem(
+//   'cinevault-force-network',
+//   'true'
+// );
+//
+// Then refresh.
+//
+// Disable:
+//
+// localStorage.removeItem(
+//   'cinevault-force-network'
+// );
+//
+// Then refresh.
+//
+
+const FORCE_NETWORK =
+  import.meta.env.DEV &&
+  localStorage.getItem(
+    'cinevault-force-network'
+  ) === 'true';
 
 // ==================================================
 // CACHE CONFIGURATION
 // ==================================================
 
 // Movie details are cached for 24 hours.
-const DETAIL_CACHE_KEY = 'cinevault-omdb-details';
-const SEARCH_CACHE_KEY = 'cinevault-omdb-search';
+const DETAIL_CACHE_KEY =
+  'cinevault-omdb-details';
 
-const CACHE_DURATION = 24 * 60 * 60 * 1000;
+const SEARCH_CACHE_KEY =
+  'cinevault-omdb-search';
 
-// In-memory cache
-const detailCache = new Map();
-const searchCache = new Map();
+const CACHE_DURATION =
+  24 * 60 * 60 * 1000;
 
-// Tracks requests that are currently running.
-// If multiple components request the same movie,
-// they will share ONE API request.
-const pendingDetailRequests = new Map();
-const pendingSearchRequests = new Map();
+// ==================================================
+// IN-MEMORY CACHE
+// ==================================================
+
+const detailCache =
+  new Map();
+
+const searchCache =
+  new Map();
+
+// ==================================================
+// PENDING REQUESTS
+// ==================================================
+
+// Prevent duplicate movie-detail requests.
+const pendingDetailRequests =
+  new Map();
+
+// Prevent duplicate search requests.
+const pendingSearchRequests =
+  new Map();
 
 // ==================================================
 // LOCAL STORAGE HELPERS
 // ==================================================
 
-const loadLocalCache = (key) => {
+const loadLocalCache = (
+  key
+) => {
   try {
-    const saved = localStorage.getItem(key);
+    const saved =
+      localStorage.getItem(key);
 
     if (!saved) {
       return {};
     }
 
-    const parsed = JSON.parse(saved);
+    const parsed =
+      JSON.parse(saved);
 
-    return parsed && typeof parsed === 'object'
+    return (
+      parsed &&
+      typeof parsed === 'object'
+    )
       ? parsed
       : {};
+
   } catch (error) {
     console.warn(
       `Failed to read cache "${key}":`,
@@ -50,12 +108,16 @@ const loadLocalCache = (key) => {
   }
 };
 
-const saveLocalCache = (key, cache) => {
+const saveLocalCache = (
+  key,
+  cache
+) => {
   try {
     localStorage.setItem(
       key,
       JSON.stringify(cache)
     );
+
   } catch (error) {
     console.warn(
       `Failed to save cache "${key}":`,
@@ -69,49 +131,64 @@ const saveLocalCache = (key, cache) => {
 // ==================================================
 
 const persistedDetailCache =
-  loadLocalCache(DETAIL_CACHE_KEY);
+  loadLocalCache(
+    DETAIL_CACHE_KEY
+  );
 
 const persistedSearchCache =
-  loadLocalCache(SEARCH_CACHE_KEY);
+  loadLocalCache(
+    SEARCH_CACHE_KEY
+  );
 
 // ==================================================
 // GET CACHED MOVIE
 // ==================================================
 
-const getCachedMovie = (imdbID) => {
+const getCachedMovie = (
+  imdbID
+) => {
   if (!imdbID) {
     return null;
   }
 
   // ----------------------------------------------
-  // 1. Check memory cache
+  // 1. MEMORY CACHE
   // ----------------------------------------------
 
-  if (detailCache.has(imdbID)) {
-    return detailCache.get(imdbID);
+  if (
+    detailCache.has(imdbID)
+  ) {
+    return detailCache.get(
+      imdbID
+    );
   }
 
   // ----------------------------------------------
-  // 2. Check localStorage cache
+  // 2. LOCAL STORAGE CACHE
   // ----------------------------------------------
 
   const cached =
-    persistedDetailCache[imdbID];
+    persistedDetailCache[
+      imdbID
+    ];
 
   if (!cached) {
     return null;
   }
 
   // ----------------------------------------------
-  // Check expiration
+  // 3. EXPIRATION CHECK
   // ----------------------------------------------
 
   if (
     !cached.timestamp ||
-    Date.now() - cached.timestamp >
+    Date.now() -
+      cached.timestamp >
       CACHE_DURATION
   ) {
-    delete persistedDetailCache[imdbID];
+    delete persistedDetailCache[
+      imdbID
+    ];
 
     saveLocalCache(
       DETAIL_CACHE_KEY,
@@ -122,7 +199,7 @@ const getCachedMovie = (imdbID) => {
   }
 
   // ----------------------------------------------
-  // Restore into memory
+  // 4. RESTORE TO MEMORY
   // ----------------------------------------------
 
   detailCache.set(
@@ -141,7 +218,10 @@ const cacheMovie = (
   imdbID,
   movie
 ) => {
-  if (!imdbID || !movie) {
+  if (
+    !imdbID ||
+    !movie
+  ) {
     return;
   }
 
@@ -151,10 +231,15 @@ const cacheMovie = (
     movie
   );
 
-  // Persistent cache
-  persistedDetailCache[imdbID] = {
-    timestamp: Date.now(),
-    data: movie,
+  // localStorage cache
+  persistedDetailCache[
+    imdbID
+  ] = {
+    timestamp:
+      Date.now(),
+
+    data:
+      movie,
   };
 
   saveLocalCache(
@@ -164,181 +249,263 @@ const cacheMovie = (
 };
 
 // ==================================================
-// GET MOVIE DETAILS
+// FORMAT OMDb MOVIE
 // ==================================================
 
-export const getMovieDetails = async (
-  imdbID
+const formatMovie = (
+  data
 ) => {
-  if (!imdbID) {
+  if (!data) {
     return null;
   }
 
-  // ==================================================
-  // CACHE CHECK
-  // ==================================================
+  return {
+    id:
+      data.imdbID,
 
-  const cachedMovie =
-    getCachedMovie(imdbID);
+    title:
+      data.Title,
 
-  if (cachedMovie) {
-    return cachedMovie;
-  }
+    year:
+      data.Year,
 
-  // ==================================================
-  // PREVENT DUPLICATE REQUESTS
-  // ==================================================
+    ageRating:
+      data.Rated !== 'N/A'
+        ? data.Rated
+        : 'NR',
 
-  if (
-    pendingDetailRequests.has(imdbID)
-  ) {
-    return pendingDetailRequests.get(
-      imdbID
-    );
-  }
+    runtime:
+      data.Runtime !== 'N/A'
+        ? data.Runtime
+        : 'N/A',
 
-  // ==================================================
-  // CREATE REQUEST
-  // ==================================================
+    rating:
+      data.imdbRating !== 'N/A'
+        ? data.imdbRating
+        : null,
 
-  const request = (async () => {
-    try {
-      const res = await fetch(
-        `${BASE_URL}?apikey=${API_KEY}&i=${imdbID}&plot=full`
-      );
+    genre:
+      data.Genre &&
+      data.Genre !== 'N/A'
+        ? data.Genre
+            .split(',')
+            .map(
+              (g) =>
+                g.trim()
+            )[0]
+        : 'Movie',
 
-      const data = await res.json();
+    genres:
+      data.Genre &&
+      data.Genre !== 'N/A'
+        ? data.Genre
+            .split(',')
+            .map(
+              (g) =>
+                g.trim()
+            )
+        : ['Movie'],
 
-      // ----------------------------------------------
-      // API ERROR
-      // ----------------------------------------------
+    director:
+      data.Director !== 'N/A'
+        ? data.Director
+        : 'Unknown',
 
-      if (data.Response === 'False') {
-        console.warn(
-          `OMDb: ${data.Error || 'Movie not found'}`
+    plot:
+      data.Plot !== 'N/A'
+        ? data.Plot
+        : 'No plot available.',
+
+    poster:
+      data.Poster !== 'N/A'
+        ? data.Poster
+        : 'https://via.placeholder.com/300x450?text=No+Poster',
+
+    banner:
+      data.Poster !== 'N/A'
+        ? data.Poster
+        : 'https://via.placeholder.com/1280x720?text=No+Banner',
+
+    cast:
+      data.Actors &&
+      data.Actors !== 'N/A'
+        ? data.Actors
+            .split(', ')
+            .map(
+              (name, i) => ({
+                name,
+
+                role:
+                  'Cast',
+
+                avatar:
+                  `https://i.pravatar.cc/150?img=${
+                    (i % 50) + 1
+                  }`,
+              })
+            )
+        : [],
+  };
+};
+
+// ==================================================
+// GET MOVIE DETAILS
+// ==================================================
+
+export const getMovieDetails =
+  async (
+    imdbID
+  ) => {
+
+    if (!imdbID) {
+      return null;
+    }
+
+    // ==================================================
+    // CACHE CHECK
+    // ==================================================
+    //
+    // In normal mode:
+    //   Memory cache
+    //       ↓
+    //   localStorage
+    //       ↓
+    //   OMDb
+    //
+    // In force-network mode:
+    //   Skip cache
+    //       ↓
+    //   OMDb
+    //
+
+    if (!FORCE_NETWORK) {
+
+      const cachedMovie =
+        getCachedMovie(
+          imdbID
         );
 
-        return null;
+      if (cachedMovie) {
+        console.log(
+          `🎬 Detail cache hit: ${imdbID}`
+        );
+
+        return cachedMovie;
       }
 
-      // ----------------------------------------------
-      // FORMAT MOVIE
-      // ----------------------------------------------
+    } else {
 
-      const formattedMovie = {
-        id: data.imdbID,
+      console.log(
+        `🌐 FORCE NETWORK: ${imdbID}`
+      );
+    }
 
-        title: data.Title,
+    // ==================================================
+    // PREVENT DUPLICATE REQUESTS
+    // ==================================================
 
-        year: data.Year,
-
-        ageRating:
-          data.Rated !== 'N/A'
-            ? data.Rated
-            : 'NR',
-
-        runtime:
-          data.Runtime !== 'N/A'
-            ? data.Runtime
-            : 'N/A',
-
-        rating:
-          data.imdbRating !== 'N/A'
-            ? data.imdbRating
-            : null,
-
-        genre:
-          data.Genre &&
-          data.Genre !== 'N/A'
-            ? data.Genre
-                .split(',')
-                .map((g) => g.trim())[0]
-            : 'Movie',
-
-        genres:
-          data.Genre &&
-          data.Genre !== 'N/A'
-            ? data.Genre
-                .split(',')
-                .map((g) => g.trim())
-            : ['Movie'],
-
-        director:
-          data.Director !== 'N/A'
-            ? data.Director
-            : 'Unknown',
-
-        plot:
-          data.Plot !== 'N/A'
-            ? data.Plot
-            : 'No plot available.',
-
-        poster:
-          data.Poster !== 'N/A'
-            ? data.Poster
-            : 'https://via.placeholder.com/300x450?text=No+Poster',
-
-        banner:
-          data.Poster !== 'N/A'
-            ? data.Poster
-            : 'https://via.placeholder.com/1280x720?text=No+Banner',
-
-        cast:
-          data.Actors &&
-          data.Actors !== 'N/A'
-            ? data.Actors
-                .split(', ')
-                .map((name, i) => ({
-                  name,
-
-                  role: 'Cast',
-
-                  avatar:
-                    `https://i.pravatar.cc/150?img=${
-                      (i % 50) + 1
-                    }`,
-                }))
-            : [],
-      };
-
-      // ----------------------------------------------
-      // SAVE TO BOTH CACHES
-      // ----------------------------------------------
-
-      cacheMovie(
-        imdbID,
-        formattedMovie
+    if (
+      pendingDetailRequests.has(
+        imdbID
+      )
+    ) {
+      console.log(
+        `⏳ Sharing pending detail request: ${imdbID}`
       );
 
-      return formattedMovie;
-
-    } catch (error) {
-      console.error(
-        `Error fetching ID ${imdbID}:`,
-        error
-      );
-
-      return null;
-
-    } finally {
-      // --------------------------------------------
-      // Remove completed request
-      // --------------------------------------------
-
-      pendingDetailRequests.delete(
+      return pendingDetailRequests.get(
         imdbID
       );
     }
-  })();
 
-  // Store running request
-  pendingDetailRequests.set(
-    imdbID,
-    request
-  );
+    // ==================================================
+    // CREATE REQUEST
+    // ==================================================
 
-  return request;
-};
+    const request =
+      (async () => {
+
+        try {
+
+          console.log(
+            `🌐 Fetching movie details: ${imdbID}`
+          );
+
+          const res =
+            await fetch(
+              `${BASE_URL}?apikey=${API_KEY}&i=${imdbID}&plot=full`
+            );
+
+          const data =
+            await res.json();
+
+          // ----------------------------------------------
+          // API ERROR
+          // ----------------------------------------------
+
+          if (
+            data.Response ===
+            'False'
+          ) {
+            console.warn(
+              `OMDb: ${
+                data.Error ||
+                'Movie not found'
+              }`
+            );
+
+            return null;
+          }
+
+          // ----------------------------------------------
+          // FORMAT MOVIE
+          // ----------------------------------------------
+
+          const formattedMovie =
+            formatMovie(
+              data
+            );
+
+          // ----------------------------------------------
+          // SAVE TO CACHE
+          // ----------------------------------------------
+
+          cacheMovie(
+            imdbID,
+            formattedMovie
+          );
+
+          console.log(
+            `💾 Cached movie details: ${imdbID}`
+          );
+
+          return formattedMovie;
+
+        } catch (error) {
+
+          console.error(
+            `Error fetching ID ${imdbID}:`,
+            error
+          );
+
+          return null;
+
+        } finally {
+
+          pendingDetailRequests.delete(
+            imdbID
+          );
+        }
+      })();
+
+    // Store running request
+    pendingDetailRequests.set(
+      imdbID,
+      request
+    );
+
+    return request;
+  };
 
 // ==================================================
 // GET CACHED SEARCH
@@ -347,8 +514,29 @@ export const getMovieDetails = async (
 const getCachedSearch = (
   query
 ) => {
+
   const normalizedQuery =
-    query.trim().toLowerCase();
+    query
+      .trim()
+      .toLowerCase();
+
+  // ----------------------------------------------
+  // MEMORY CACHE
+  // ----------------------------------------------
+
+  if (
+    searchCache.has(
+      normalizedQuery
+    )
+  ) {
+    return searchCache.get(
+      normalizedQuery
+    );
+  }
+
+  // ----------------------------------------------
+  // LOCAL STORAGE CACHE
+  // ----------------------------------------------
 
   const cached =
     persistedSearchCache[
@@ -360,14 +548,16 @@ const getCachedSearch = (
   }
 
   // ----------------------------------------------
-  // Check expiration
+  // EXPIRATION CHECK
   // ----------------------------------------------
 
   if (
     !cached.timestamp ||
-    Date.now() - cached.timestamp >
+    Date.now() -
+      cached.timestamp >
       CACHE_DURATION
   ) {
+
     delete persistedSearchCache[
       normalizedQuery
     ];
@@ -380,7 +570,10 @@ const getCachedSearch = (
     return null;
   }
 
-  // Restore memory cache
+  // ----------------------------------------------
+  // RESTORE TO MEMORY
+  // ----------------------------------------------
+
   searchCache.set(
     normalizedQuery,
     cached.data
@@ -397,19 +590,27 @@ const cacheSearch = (
   query,
   results
 ) => {
-  const normalizedQuery =
-    query.trim().toLowerCase();
 
+  const normalizedQuery =
+    query
+      .trim()
+      .toLowerCase();
+
+  // Memory cache
   searchCache.set(
     normalizedQuery,
     results
   );
 
+  // localStorage cache
   persistedSearchCache[
     normalizedQuery
   ] = {
-    timestamp: Date.now(),
-    data: results,
+    timestamp:
+      Date.now(),
+
+    data:
+      results,
   };
 
   saveLocalCache(
@@ -422,222 +623,294 @@ const cacheSearch = (
 // SEARCH MOVIES
 // ==================================================
 
-export const searchMovies = async (
-  query
-) => {
-  if (!query?.trim()) {
-    return [];
-  }
+export const searchMovies =
+  async (
+    query
+  ) => {
 
-  const normalizedQuery =
-    query.trim().toLowerCase();
+    if (
+      !query?.trim()
+    ) {
+      return [];
+    }
 
-  // ==================================================
-  // MEMORY CACHE
-  // ==================================================
+    const normalizedQuery =
+      query
+        .trim()
+        .toLowerCase();
 
-  if (
-    searchCache.has(
-      normalizedQuery
-    )
-  ) {
-    return searchCache.get(
-      normalizedQuery
-    );
-  }
+    // ==================================================
+    // CACHE CHECK
+    // ==================================================
 
-  // ==================================================
-  // LOCAL STORAGE CACHE
-  // ==================================================
+    if (!FORCE_NETWORK) {
 
-  const cachedSearch =
-    getCachedSearch(query);
+      // ----------------------------------------------
+      // MEMORY CACHE
+      // ----------------------------------------------
 
-  if (cachedSearch) {
-    return cachedSearch;
-  }
-
-  // ==================================================
-  // PREVENT DUPLICATE SEARCH REQUESTS
-  // ==================================================
-
-  if (
-    pendingSearchRequests.has(
-      normalizedQuery
-    )
-  ) {
-    return pendingSearchRequests.get(
-      normalizedQuery
-    );
-  }
-
-  // ==================================================
-  // CREATE SEARCH REQUEST
-  // ==================================================
-
-  const request = (async () => {
-    try {
-      // --------------------------------------------
-      // ONE SEARCH REQUEST
-      // --------------------------------------------
-
-      const res = await fetch(
-        `${BASE_URL}?apikey=${API_KEY}&s=${encodeURIComponent(
-          query.trim()
-        )}&type=movie`
-      );
-
-      const data = await res.json();
-
-      if (data.Response === 'False') {
-        cacheSearch(
-          query,
-          []
+      if (
+        searchCache.has(
+          normalizedQuery
+        )
+      ) {
+        console.log(
+          `🔎 Search memory cache hit: "${normalizedQuery}"`
         );
 
-        return [];
+        return searchCache.get(
+          normalizedQuery
+        );
       }
 
-      // --------------------------------------------
-      // Take top 6 results
-      // --------------------------------------------
+      // ----------------------------------------------
+      // LOCAL STORAGE CACHE
+      // ----------------------------------------------
 
-      const rawResults = (
-        data.Search || []
-      ).slice(0, 6);
-
-      // --------------------------------------------
-      // Hydrate results
-      // --------------------------------------------
-
-      const hydratedMovies =
-        await Promise.all(
-          rawResults.map(
-            async (item) => {
-              const details =
-                await getMovieDetails(
-                  item.imdbID
-                );
-
-              // --------------------------------
-              // Use full cached/API details
-              // --------------------------------
-
-              if (details) {
-                return details;
-              }
-
-              // --------------------------------
-              // Fallback search result
-              // --------------------------------
-
-              return {
-                id: item.imdbID,
-
-                title: item.Title,
-
-                year: item.Year,
-
-                poster:
-                  item.Poster !== 'N/A'
-                    ? item.Poster
-                    : 'https://via.placeholder.com/300x450?text=No+Poster',
-
-                rating: null,
-
-                genre: 'Movie',
-
-                genres: ['Movie'],
-              };
-            }
-          )
+      const cachedSearch =
+        getCachedSearch(
+          query
         );
 
-      const results =
-        hydratedMovies.filter(Boolean);
+      if (cachedSearch) {
 
-      // --------------------------------------------
-      // Cache complete search
-      // --------------------------------------------
+        console.log(
+          `💾 Search localStorage cache hit: "${normalizedQuery}"`
+        );
 
-      cacheSearch(
-        query,
-        results
+        return cachedSearch;
+      }
+
+    } else {
+
+      console.log(
+        `🌐 FORCE NETWORK SEARCH: "${normalizedQuery}"`
+      );
+    }
+
+    // ==================================================
+    // PREVENT DUPLICATE SEARCH REQUESTS
+    // ==================================================
+
+    if (
+      pendingSearchRequests.has(
+        normalizedQuery
+      )
+    ) {
+
+      console.log(
+        `⏳ Sharing pending search request: "${normalizedQuery}"`
       );
 
-      return results;
-
-    } catch (error) {
-      console.error(
-        'Search error:',
-        error
-      );
-
-      throw new Error(
-        'Failed to fetch search results from OMDb.',
-        {
-          cause: error,
-        }
-      );
-
-    } finally {
-      pendingSearchRequests.delete(
+      return pendingSearchRequests.get(
         normalizedQuery
       );
     }
-  })();
 
-  pendingSearchRequests.set(
-    normalizedQuery,
-    request
-  );
+    // ==================================================
+    // CREATE SEARCH REQUEST
+    // ==================================================
 
-  return request;
-};
+    const request =
+      (async () => {
+
+        try {
+
+          console.log(
+            `🌐 Searching OMDb: "${normalizedQuery}"`
+          );
+
+          // --------------------------------------------
+          // ONLY ONE OMDb SEARCH REQUEST
+          // --------------------------------------------
+
+          const res =
+            await fetch(
+              `${BASE_URL}?apikey=${API_KEY}&s=${encodeURIComponent(
+                query.trim()
+              )}&type=movie`
+            );
+
+          const data =
+            await res.json();
+
+          // --------------------------------------------
+          // API ERROR
+          // --------------------------------------------
+
+          if (
+            data.Response ===
+            'False'
+          ) {
+
+            cacheSearch(
+              query,
+              []
+            );
+
+            return [];
+          }
+
+          // --------------------------------------------
+          // SEARCH RESULTS
+          // --------------------------------------------
+
+          const rawResults =
+            (
+              data.Search ||
+              []
+            ).slice(
+              0,
+              6
+            );
+
+          // --------------------------------------------
+          // IMPORTANT:
+          // DO NOT FETCH DETAILS HERE.
+          //
+          // This prevents:
+          //
+          // 1 search request
+          // +
+          // 6 detail requests
+          //
+          // Instead:
+          //
+          // 1 search request only.
+          // --------------------------------------------
+
+          const results =
+            rawResults.map(
+              (item) => ({
+                id:
+                  item.imdbID,
+
+                title:
+                  item.Title,
+
+                year:
+                  item.Year,
+
+                poster:
+                  item.Poster !==
+                  'N/A'
+                    ? item.Poster
+                    : 'https://via.placeholder.com/300x450?text=No+Poster',
+
+                rating:
+                  null,
+
+                genre:
+                  'Movie',
+
+                genres:
+                  ['Movie'],
+              })
+            );
+
+          // --------------------------------------------
+          // CACHE SEARCH RESULTS
+          // --------------------------------------------
+
+          cacheSearch(
+            query,
+            results
+          );
+
+          console.log(
+            `💾 Cached search: "${normalizedQuery}"`
+          );
+
+          return results;
+
+        } catch (error) {
+
+          console.error(
+            'Search error:',
+            error
+          );
+
+          throw new Error(
+            'Failed to fetch search results from OMDb API.',
+            {
+              cause:
+                error,
+            }
+          );
+
+        } finally {
+
+          pendingSearchRequests.delete(
+            normalizedQuery
+          );
+        }
+      })();
+
+    pendingSearchRequests.set(
+      normalizedQuery,
+      request
+    );
+
+    return request;
+  };
 
 // ==================================================
 // FETCH CURATED HOMEPAGE ROW
 // ==================================================
 
-export const fetchCuratedRow = async (
-  idArray
-) => {
-  if (
-    !Array.isArray(idArray) ||
-    idArray.length === 0
-  ) {
-    return [];
-  }
+export const fetchCuratedRow =
+  async (
+    idArray
+  ) => {
 
-  // ==================================================
-  // REMOVE DUPLICATE IDS
-  // ==================================================
+    if (
+      !Array.isArray(
+        idArray
+      ) ||
+      idArray.length === 0
+    ) {
+      return [];
+    }
 
-  const uniqueIds =
-    [...new Set(
-      idArray.filter(Boolean)
-    )];
+    // ==================================================
+    // REMOVE DUPLICATE IDS
+    // ==================================================
 
-  // ==================================================
-  // FETCH MOVIES
-  // ==================================================
+    const uniqueIds = [
+      ...new Set(
+        idArray.filter(
+          Boolean
+        )
+      ),
+    ];
 
-  const movies =
-    await Promise.all(
-      uniqueIds.map((id) =>
-        getMovieDetails(id)
-      )
+    // ==================================================
+    // FETCH MOVIES
+    // ==================================================
+
+    const movies =
+      await Promise.all(
+        uniqueIds.map(
+          (id) =>
+            getMovieDetails(
+              id
+            )
+        )
+      );
+
+    return movies.filter(
+      Boolean
     );
-
-  return movies.filter(Boolean);
-};
+  };
 
 // ==================================================
 // PERSONALIZED RECOMMENDATIONS
 // ==================================================
 
 export const getPersonalizedRecommendations =
-  async (watchlist) => {
+  async (
+    watchlist
+  ) => {
 
     if (
       !watchlist ||
@@ -652,45 +925,52 @@ export const getPersonalizedRecommendations =
       // STEP 1: FIND PREFERRED GENRES
       // --------------------------------------------
 
-      const genreFrequency = {};
+      const genreFrequency =
+        {};
 
-      watchlist.forEach((movie) => {
+      watchlist.forEach(
+        (movie) => {
 
-        const genres =
-          movie.genres ||
-          (
-            movie.genre
-              ? movie.genre
-                  .split(',')
-                  .map(
-                    (g) =>
-                      g.trim()
-                  )
-              : []
-          );
+          const genres =
+            movie.genres ||
+            (
+              movie.genre
+                ? movie.genre
+                    .split(',')
+                    .map(
+                      (g) =>
+                        g.trim()
+                    )
+                : []
+            );
 
-        genres.forEach((genre) => {
+          genres.forEach(
+            (genre) => {
 
-          const normalized =
-            genre
-              .toLowerCase()
-              .trim();
+              const normalized =
+                genre
+                  .toLowerCase()
+                  .trim();
 
-          if (
-            normalized &&
-            normalized !== 'movie'
-          ) {
-            genreFrequency[
-              normalized
-            ] =
-              (
+              if (
+                normalized &&
+                normalized !==
+                  'movie'
+              ) {
+
                 genreFrequency[
                   normalized
-                ] || 0
-              ) + 1;
-          }
-        });
-      });
+                ] =
+                  (
+                    genreFrequency[
+                      normalized
+                    ] || 0
+                  ) + 1;
+              }
+            }
+          );
+        }
+      );
 
       // --------------------------------------------
       // STEP 2: SORT GENRES
@@ -704,7 +984,10 @@ export const getPersonalizedRecommendations =
             (a, b) =>
               b[1] - a[1]
           )
-          .slice(0, 2);
+          .slice(
+            0,
+            2
+          );
 
       if (
         !preferredGenres.length
@@ -724,7 +1007,8 @@ export const getPersonalizedRecommendations =
               genre;
 
             if (
-              genre === 'sci-fi'
+              genre ===
+              'sci-fi'
             ) {
               searchTerm =
                 'science fiction';
@@ -832,6 +1116,7 @@ export const getPersonalizedRecommendations =
                     normalized
                   ]
                 ) {
+
                   score +=
                     genreFrequency[
                       normalized
@@ -847,20 +1132,25 @@ export const getPersonalizedRecommendations =
               );
 
             if (
-              !isNaN(rating)
+              !isNaN(
+                rating
+              )
             ) {
+
               score +=
                 rating * 3;
             }
 
             // Recent movie bonus
             const currentYear =
-              new Date().getFullYear();
+              new Date()
+                .getFullYear();
 
             const movieYear =
               parseInt(
                 String(
-                  movie.year || ''
+                  movie.year ||
+                    ''
                 ).substring(
                   0,
                   4
@@ -869,7 +1159,9 @@ export const getPersonalizedRecommendations =
               );
 
             if (
-              !isNaN(movieYear)
+              !isNaN(
+                movieYear
+              )
             ) {
 
               const age =
@@ -879,11 +1171,13 @@ export const getPersonalizedRecommendations =
               if (
                 age <= 3
               ) {
+
                 score += 4;
 
               } else if (
                 age <= 8
               ) {
+
                 score += 2;
               }
             }
@@ -924,5 +1218,78 @@ export const getPersonalizedRecommendations =
       );
 
       return [];
+    }
+  };
+
+// ==================================================
+// OPTIONAL CACHE CLEAR FUNCTIONS
+// ==================================================
+
+export const clearMovieCache =
+  () => {
+
+    detailCache.clear();
+
+    deleteAllLocalStorageEntries(
+      DETAIL_CACHE_KEY
+    );
+
+    console.log(
+      '🗑️ Movie detail cache cleared'
+    );
+  };
+
+export const clearSearchCache =
+  () => {
+
+    searchCache.clear();
+
+    deleteAllLocalStorageEntries(
+      SEARCH_CACHE_KEY
+    );
+
+    console.log(
+      '🗑️ Search cache cleared'
+    );
+  };
+
+export const clearAllMovieCache =
+  () => {
+
+    detailCache.clear();
+    searchCache.clear();
+
+    deleteAllLocalStorageEntries(
+      DETAIL_CACHE_KEY
+    );
+
+    deleteAllLocalStorageEntries(
+      SEARCH_CACHE_KEY
+    );
+
+    console.log(
+      '🗑️ All CineVault API caches cleared'
+    );
+  };
+
+// ==================================================
+// LOCAL STORAGE CACHE DELETE HELPER
+// ==================================================
+
+const deleteAllLocalStorageEntries =
+  (key) => {
+
+    try {
+
+      localStorage.removeItem(
+        key
+      );
+
+    } catch (error) {
+
+      console.warn(
+        `Failed to clear cache "${key}":`,
+        error
+      );
     }
   };

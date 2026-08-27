@@ -15,6 +15,7 @@ const ContentStream = ({
   compareList = [],
   onFavorite,
   isFavorite,
+  onGenreChange,
 }) => {
 
   const [
@@ -117,10 +118,17 @@ const ContentStream = ({
       selectedGenre === genre
     ) {
       setSelectedGenre(null);
+
+      // Tell App that genre was cleared
+      onGenreChange?.(null);
+
       return;
     }
 
     setSelectedGenre(genre);
+
+    // Tell App that a genre is active
+    onGenreChange?.(genre);
 
     setTimeout(() => {
       const target =
@@ -144,6 +152,9 @@ const ContentStream = ({
   const handleClearGenre = () => {
 
     setSelectedGenre(null);
+
+    // Tell App that genre was cleared
+    onGenreChange?.(null);
 
     setTimeout(() => {
 
@@ -244,14 +255,16 @@ const ContentStream = ({
 
           ) : (
 
-            <div className="
-              py-20
-              text-center
-              border
-              border-neutral-800
-              rounded-2xl
-              bg-neutral-950/50
-            ">
+            <div
+              className="
+                py-20
+                text-center
+                border
+                border-neutral-800
+                rounded-2xl
+                bg-neutral-950/50
+              "
+            >
 
               <div className="text-4xl mb-4">
                 🎬
@@ -447,44 +460,52 @@ const ContentStream = ({
                         }}
                       />
 
-                      <div className="
-                        flex
-                        flex-col
-                        gap-2
-                        justify-center
-                        overflow-hidden
-                      ">
+                      <div
+                        className="
+                          flex
+                          flex-col
+                          gap-2
+                          justify-center
+                          overflow-hidden
+                        "
+                      >
 
-                        <span className="
-                          text-[10px]
-                          text-[#FFB800]
-                          font-bold
-                          tracking-wider
-                          uppercase
-                        ">
+                        <span
+                          className="
+                            text-[10px]
+                            text-[#FFB800]
+                            font-bold
+                            tracking-wider
+                            uppercase
+                          "
+                        >
                           RELEASING{' '}
                           {movie.releaseDate ||
                             'SOON'}
                         </span>
 
-                        <h3 className="
-                          text-lg
-                          font-bold
-                          text-white
-                          m-0
-                          leading-tight
-                          truncate
-                        ">
+                        <h3
+                          className="
+                            text-lg
+                            font-bold
+                            text-white
+                            m-0
+                            leading-tight
+                            truncate
+                          "
+                        >
                           {movie.title}
                         </h3>
 
-                        <p className="
-                          text-[13px]
-                          text-neutral-400
-                          leading-relaxed
-                          m-0
-                          line-clamp-2
-                        ">
+                        <p
+                          className="
+                            text-[13px]
+                            text-neutral-400
+                            leading-relaxed
+                            m-0
+                            line-clamp-2
+                          "
+                        >
                           {movie.plot ||
                             movie.description ||
                             'Full plot details coming soon...'}
@@ -501,7 +522,6 @@ const ContentStream = ({
 
           </div>
         </>
-
       )}
 
       {/* ==================================================
